@@ -1,0 +1,197 @@
+.carousel {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #e5dada;
+}
+
+.carousel__viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+  background-color: #000;
+}
+
+.carousel__track {
+  display: flex;
+  height: 100%;
+  transition: transform 400ms ease;
+  will-change: transform;
+}
+
+.carousel__slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+}
+
+.carousel__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+  pointer-events: none;
+}
+
+.carousel__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 24px;
+  padding: clamp(48px, 12vh, 96px) clamp(24px, 6vw, 72px) clamp(96px, 18vh, 160px);
+  background: linear-gradient(185deg, rgba(0, 0, 0, 0) 28%, rgba(0, 0, 0, 0.58) 72%, rgba(0, 0, 0, 0.7) 100%);
+  color: #fdfdfd;
+}
+
+.carousel__copy {
+  max-width: clamp(320px, 42vw, 560px);
+}
+
+.carousel__headline {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+}
+
+.carousel__cta-button {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 36px;
+  border: none;
+  border-radius: 10px;
+  background-color: #ffd24f;
+  color: #132326;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+}
+
+.carousel__cta-button:hover,
+.carousel__cta-button:focus-visible {
+  background-color: #ffe27b;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+  outline: none;
+}
+
+.carousel__cta-button:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.carousel__indicators {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel__dot {
+  width: 28px;
+  height: 6px;
+  border-radius: 999px;
+  border: none;
+  background-color: white;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 200ms ease, width 200ms ease, transform 200ms ease;
+}
+
+.carousel__dot:hover,
+.carousel__dot:focus-visible {
+  background-color: #f8cc38;
+  outline: none;
+}
+
+.carousel__dot--active {
+  background-color: #fff;
+  width: 42px;
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .carousel__overlay {
+    padding: clamp(40px, 10vh, 64px) clamp(20px, 7vw, 36px) clamp(80px, 16vh, 120px);
+  }
+
+  .carousel__copy {
+    max-width: min(420px, 90vw);
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel__overlay {
+    justify-content: center;
+    padding-bottom: clamp(120px, 22vh, 220px);
+  }
+
+  .carousel__copy {
+    max-width: clamp(420px, 32vw, 640px);
+  }
+}
+
+@media (max-width: 520px) {
+  .carousel__overlay {
+    padding: 40px 20px 112px;
+    gap: 20px;
+  }
+
+  .carousel__headline {
+    font-size: clamp(24px, 7vw, 32px);
+  }
+
+  .carousel__description {
+    font-size: clamp(15px, 4vw, 17px);
+  }
+
+  .carousel__cta-button {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+.carousel__description {
+  margin: 0;
+  font-family: playfair display, serif;
+  font-size: clamp(20px, 2.6vw, 22px);
+  line-height: 1.45;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: clamp(280px, 48vw, 520px);
+  text-align: left;
+}
+
+.carousel__description-primary {
+  color: #ffd24f;
+  font-weight: 700;
+}
+
+.carousel__description-accent {
+  color: #8de0c5;
+  font-weight: 700;
+}
+
+/* highlight specific words */
+.carousel__description strong,
+.carousel__description span.highlight {
+  color: #f8cc38;
+  font-weight: 700;
+}

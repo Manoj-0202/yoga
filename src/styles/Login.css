@@ -1,0 +1,225 @@
+/* ========= Base Reset ========= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* ========= Container ========= */
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px 20px 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 16px 0;
+}
+
+/* ========= Logo ========= */
+.logo-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.logo-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.logo-circle img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+
+/* ========= Welcome Text ========= */
+.welcome-section {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.welcome-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #3c8169;
+  font-family: "Roboto";
+}
+.welcome-subtitle,
+.otp-description-text {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ========= Input Box ========= */
+.input-box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.input-label {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.country-select,
+.mobile-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.country-select:focus,
+.mobile-input:focus {
+  border-color: #3c8169;
+  box-shadow: 0 0 0 3px rgba(60, 129, 105, 0.25);
+}
+
+/* ========= Primary Button ========= */
+.otp-button {
+  width: 100%;
+  height: 42px;
+  background: #3c8169;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.otp-button:hover:not(.disabled) {
+  background: #2f6a55;
+  transform: translateY(-1px);
+}
+.otp-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========= Feedback ========= */
+.login-feedback {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+.login-feedback--error {
+  color: #dc2626;
+}
+.login-feedback--success {
+  color: #16a34a;
+}
+
+/* ========= Divider ========= */
+.divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  color: #9ca3af;
+  font-size: 12px;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* ========= Social Buttons ========= */
+.social-buttons {
+  display: grid;
+  gap: 6px;
+}
+.social-btn {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.social-btn:hover {
+  background: #f9fafb;
+}
+
+/* ========= Create Account ========= */
+.create-account {
+  font-size: 12px;
+  color: #475569;
+  text-align: center;
+  margin-top: 8px;
+}
+.create-link {
+  background: none;
+  border: none;
+  color: #3c8169;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ========= Responsive Tweaks ========= */
+@media (max-width: 480px) {
+  .login-container {
+    max-width: 100%;
+    padding: 20px;
+    margin-top: 40px;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .otp-single-input {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 768px) {
+  .login-container {
+    max-width: 420px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .login-container {
+    max-width: 480px;
+  }
+}

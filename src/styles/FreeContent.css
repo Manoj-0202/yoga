@@ -1,0 +1,247 @@
+.free-content {
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Roboto", sans-serif;
+  color: #1f2937;
+}
+
+/* ---------- HEADER ---------- */
+.free-header {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 0;
+}
+
+.free-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.free-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #ffb800;
+  padding: 3px;
+}
+
+.free-logo-section h3 {
+  font-size: 18px;
+  color: #3c8169;
+  font-weight: 600;
+}
+
+.free-logo-section span {
+  color: #111;
+  font-weight: 400;
+}
+
+/* ---------- TABS ---------- */
+.free-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  margin-top: 15px;
+  padding-left: 4px;
+  font-size: 14px;
+  color: #9ca3af;
+  white-space: nowrap;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.free-tabs .active-tab {
+  color: #3c8169;
+  font-weight: 600;
+}
+
+.free-tabs .nav-link {
+  color: #3c8169;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ---------- SECTION ---------- */
+.free-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 16px 8px;
+}
+
+.free-section h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.see-more {
+  border: none;
+  background: none;
+  color: #3c8169;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ---------- MAIN VIDEO ---------- */
+.video-container {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.main-video {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 10px;
+  background: #000;
+  object-fit: cover;
+}
+
+.video-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.video-details h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.play-all-btn {
+  background: #ffb800;
+  color: #fff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.play-all-btn:hover {
+  background: #e6a400;
+}
+
+/* ---------- LET’S BEGIN ---------- */
+.lets-section {
+  padding: 20px 16px 80px;
+}
+
+.lets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.lets-header h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.lets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- CARD ---------- */
+.lesson-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 10px 12px;
+}
+
+.lesson-thumb-wrapper {
+  position: relative;
+  width: 150px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.lesson-thumb {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #000;
+}
+
+.lesson-duration {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+
+/* ---------- CARD TEXT CONTENT ---------- */
+.lesson-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.lesson-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.lesson-title-row h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.lesson-tag {
+  background: #e6f4ef;
+  color: #3c8169;
+  border-radius: 12px;
+  font-size: 11px;
+  padding: 2px 8px;
+  font-weight: 500;
+}
+
+.lesson-content p {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 480px) {
+  .lesson-thumb-wrapper {
+    width: 100px;
+    height: 75px;
+  }
+  .lesson-title-row h5 {
+    font-size: 13px;
+  }
+  .lesson-content p {
+    font-size: 11px;
+  }
+}
