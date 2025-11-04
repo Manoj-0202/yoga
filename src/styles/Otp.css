@@ -44,7 +44,7 @@
   background: #f1f5f9;
 }
 .back-button-top::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -54,7 +54,6 @@
   border-bottom: 2px solid #111827;
   transform: translate(-50%, -50%) rotate(45deg);
 }
-
 
 /* ========= OTP Screen Layout ========= */
 .login-content {
@@ -97,7 +96,7 @@
   cursor: pointer;
 }
 .back-button-top::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;

@@ -40,7 +40,7 @@ export const Home: React.FC = () => {
           </p>
 
           <div className="welcome-actions">
-            <button className="btn-primary">Personalised</button>
+            <button className="btn-primary" onClick={() => window.history.pushState(null, '', '/personalised-details')}>Personalised</button>
             <button className="btn-outline" onClick={() => window.history.pushState(null, '', '/free-content')}>Free Content</button>
           </div>
         </div>

@@ -46,8 +46,14 @@
   flex-direction: column;
   justify-content: flex-end;
   gap: 24px;
-  padding: clamp(48px, 12vh, 96px) clamp(24px, 6vw, 72px) clamp(96px, 18vh, 160px);
-  background: linear-gradient(185deg, rgba(0, 0, 0, 0) 28%, rgba(0, 0, 0, 0.58) 72%, rgba(0, 0, 0, 0.7) 100%);
+  padding: clamp(48px, 12vh, 96px) clamp(24px, 6vw, 72px)
+    clamp(96px, 18vh, 160px);
+  background: linear-gradient(
+    185deg,
+    rgba(0, 0, 0, 0) 28%,
+    rgba(0, 0, 0, 0.58) 72%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
   color: #fdfdfd;
 }
 
@@ -77,7 +83,8 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+  transition: transform 200ms ease, box-shadow 200ms ease,
+    background-color 200ms ease;
 }
 
 .carousel__cta-button:hover,
@@ -111,7 +118,8 @@
   background-color: white;
   cursor: pointer;
   padding: 0;
-  transition: background-color 200ms ease, width 200ms ease, transform 200ms ease;
+  transition: background-color 200ms ease, width 200ms ease,
+    transform 200ms ease;
 }
 
 .carousel__dot:hover,
@@ -128,7 +136,8 @@
 
 @media (max-width: 768px) {
   .carousel__overlay {
-    padding: clamp(40px, 10vh, 64px) clamp(20px, 7vw, 36px) clamp(80px, 16vh, 120px);
+    padding: clamp(40px, 10vh, 64px) clamp(20px, 7vw, 36px)
+      clamp(80px, 16vh, 120px);
   }
 
   .carousel__copy {

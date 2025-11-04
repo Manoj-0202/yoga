@@ -1,41 +1,46 @@
 .free-content {
-  background: #fff;
+  background: var(--color-surface);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: "Roboto", sans-serif;
-  color: #1f2937;
+  color: var(--color-text-primary);
+  padding-bottom: calc(6rem + var(--space  pad-6));
+
 }
 
 /* ---------- HEADER ---------- */
 .free-header {
   display: flex;
   flex-direction: column;
-  padding: 16px 16px 0;
+  gap: clamp(var(--space-3), 4vw, var(--space-5));  
+  padding: clamp(var(--space-5), 6vw, var(--space-7))
+    clamp(var(--space-5), 6vw, var(--space-7)) 0;
+
 }
 
 .free-logo-section {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-4);
 }
 
 .free-logo {
-  width: 60px;
-  height: 60px;
+  width: clamp(5.6rem, 14vw, 6.8rem);
+  height: clamp(5.6rem, 14vw, 6.8rem);
   border-radius: 50%;
-  border: 2px solid #ffb800;
-  padding: 3px;
+  border: 0.2rem solid var(--color-accent);
+  padding: 0.3rem;
 }
 
 .free-logo-section h3 {
-  font-size: 18px;
-  color: #3c8169;
+  font-size: var(--font-size-md);
+  color: var(--color-brand);
   font-weight: 600;
+  margin: 0;
 }
 
 .free-logo-section span {
-  color: #111;
+  color: var(--color-text-primary);
   font-weight: 400;
 }
 
@@ -44,23 +49,26 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 18px;
-  margin-top: 15px;
-  padding-left: 4px;
-  font-size: 14px;
-  color: #9ca3af;
+  gap: clamp(var(--space-4), 4vw, var(--space-6));
+  margin-top: var(--space-2);
+  padding-inline: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   white-space: nowrap;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 8px;
+  border-bottom: 0.1rem solid var(--color-border);
+  padding-bottom: var(--space-3);
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .free-tabs .active-tab {
-  color: #3c8169;
+  color: var(--color-brand);
   font-weight: 600;
 }
 
 .free-tabs .nav-link {
-  color: #3c8169;
+  color: var(--color-brand);
   font-weight: 600;
   text-decoration: none;
 }
@@ -69,63 +77,68 @@
 .free-section {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 20px 16px 8px;
+  align-items: center;  padding: clamp(var(--space-6), 6vw, var(--space-7))
+    clamp(var(--space-5), 6vw, var(--space-7)) var(--space-3);
+
+  gap: clamp(var(--space-3), 3vw, var(--space-4));
 }
 
 .free-section h4 {
-  font-size: 16px;
+  font-size: var(--font-size-md);
   font-weight: 700;
-  color: #1f2937;
+  margin: 0;
 }
 
 .see-more {
   border: none;
   background: none;
-  color: #3c8169;
-  font-size: 13px;
+  color: var(--color-brand);
+  font-size: var(--font-size-xs);
   cursor: pointer;
 }
 
 /* ---------- MAIN VIDEO ---------- */
 .video-container {
-  padding: 0 16px;
+  padding: 0 clamp(var(--space-5), 6vw, var(--space-7));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: clamp(var(--space-3), 3vw, var(--space-4));
 }
 
 .main-video {
   width: 100%;
-  max-height: 220px;
-  border-radius: 10px;
+  max-height: clamp(16rem, 45vw, 28rem);
+  border-radius: var(--radius-md);
   background: #000;
   object-fit: cover;
 }
 
 .video-details {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-top: 10px;
+  gap: clamp(var(--space-3), 3vw, var(--space-4));
 }
 
 .video-details h5 {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #1f2937;
+  margin: 0;
 }
 
 .play-all-btn {
-  background: #ffb800;
+  background: var(--color-accent);
   color: #fff;
   border: none;
-  padding: 6px 16px;
-  border-radius: 25px;
-  font-size: 13px;
+  padding: var(--space-2) clamp(var(--space-4), 5vw, var(--space-5));
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
+  min-height: 4.4rem;
   transition: background 0.2s ease;
 }
 
@@ -133,66 +146,72 @@
   background: #e6a400;
 }
 
-/* ---------- LET’S BEGIN ---------- */
+/* ---------- LET'S BEGIN ---------- */
 .lets-section {
-  padding: 20px 16px 80px;
+  padding: clamp(var(--space-6), 7vw, var(--space-8))
+    clamp(var(--space-5), 6vw, var(--space-7))
+    clamp(var(--space-8), 12vw, var(--space-10));
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-5), 4vw, var(--space-6));
 }
 
 .lets-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  gap: var(--space-4);
 }
 
 .lets-header h4 {
-  font-size: 16px;
+  font-size: var(--font-size-md);
   font-weight: 700;
-  color: #1f2937;
+  margin: 0;
 }
 
 .lets-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-5);
 }
 
 /* ---------- CARD ---------- */
 .lesson-card {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.08);
-  padding: 10px 12px;
+  gap: clamp(var(--space-3), 4vw, var(--space-4));
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  padding: clamp(var(--space-3), 4vw, var(--space-5))
+    clamp(var(--space-4), 6vw, var(--space-5));
 }
 
 .lesson-thumb-wrapper {
   position: relative;
-  width: 150px;
-  height: 120px;
+  width: clamp(9rem, 30vw, 15rem);
+  height: clamp(7rem, 20vw, 12rem);
   flex-shrink: 0;
 }
 
 .lesson-thumb {
   width: 100%;
   height: 100%;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   background: #000;
 }
 
 .lesson-duration {
   position: absolute;
-  bottom: 6px;
-  left: 6px;
-  background: rgba(0, 0, 0, 0.6);
+  bottom: var(--space-2);
+  left: var(--space-2);
+  background: rgba(15, 23, 42, 0.7);
   color: #fff;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.2px;
+  font-size: var(--font-size-xs);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
 }
 
 /* ---------- CARD TEXT CONTENT ---------- */
@@ -200,48 +219,91 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: clamp(var(--space-2), 2vw, var(--space-3));
 }
 
 .lesson-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  gap: var(--space-3);
 }
 
 .lesson-title-row h5 {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #1f2937;
   margin: 0;
 }
 
 .lesson-tag {
   background: #e6f4ef;
-  color: #3c8169;
-  border-radius: 12px;
-  font-size: 11px;
-  padding: 2px 8px;
+  color: var(--color-brand);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  padding: 0 clamp(var(--space-2), 3vw, var(--space-3));
   font-weight: 500;
 }
 
 .lesson-content p {
-  font-size: 12px;
-  color: #6b7280;
-  line-height: 1.4;
-  margin-top: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* ---------- RESPONSIVE ---------- */
-@media (max-width: 480px) {
-  .lesson-thumb-wrapper {
-    width: 100px;
-    height: 75px;
+@media (min-width: 48rem) {
+  .free-header,
+  .video-container,
+  .lets-section {
+    padding-left: clamp(var(--space-7), 6vw, var(--space-9));
+    padding-right: clamp(var(--space-7), 6vw, var(--space-9));
   }
+
+  .lesson-card {
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-6);
+  }
+}
+
+@media (min-width: 64rem) {
+  .video-container {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .main-video {
+    flex: 2;
+  }
+
+  .video-details {
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 24rem) {
+  .free-logo-section h3 {
+    font-size: var(--font-size-sm);
+  }
+
+  .free-section h4,
+  .lets-header h4 {
+    font-size: var(--font-size-sm);
+  }
+
+  .video-details h5,
   .lesson-title-row h5 {
-    font-size: 13px;
+    font-size: var(--font-size-xs);
   }
+
+  .play-all-btn,
+  .see-more {
+    font-size: calc(var(--font-size-xs) - 0.1rem);
+  }
+
   .lesson-content p {
-    font-size: 11px;
+    font-size: calc(var(--font-size-xs) - 0.1rem);
   }
 }

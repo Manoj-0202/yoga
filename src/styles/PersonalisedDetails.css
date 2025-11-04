@@ -1,0 +1,475 @@
+.personalFormContainer {
+  min-height: 100vh;
+  padding: clamp(var(--space-6), 8vw, var(--space-9))
+    clamp(var(--space-5), 10vw, var(--space-9));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(var(--space-6), 6vw, var(--space-8));
+  background: linear-gradient(180deg, var(--color-elevated) 0%, var(--color-surface) 100%);
+  color: var(--color-text-primary);
+}
+
+.header {
+  width: min(100%, 46rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-3), 4vw, var(--space-4));
+}
+
+.backButton {
+  --button-size: clamp(3.6rem, 4vw, 4.4rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--button-size);
+  height: var(--button-size);
+  border: 0.1rem solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-brand);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.backButton:hover {
+  border-color: var(--color-brand);
+  color: var(--color-brand-dark);
+  box-shadow: 0 0.8rem 1.6rem rgba(60, 129, 105, 0.16);
+  transform: translateY(-1px);
+}
+
+.backButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.3rem rgba(60, 129, 105, 0.28);
+}
+
+.angleIcon {
+  width: clamp(1.6rem, 2vw, 2.2rem);
+  height: auto;
+  fill: currentColor;
+}
+
+.headerContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.step {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.brand {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-brand);
+  margin: 0;
+}
+
+.formBox {
+  width: min(100%, 46rem);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: clamp(var(--space-6), 8vw, var(--space-7));
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-3), 3vw, var(--space-5));
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.formTitle {
+  font-size: var(--font-size-md);
+  color: var(--color-brand-dark);
+  font-weight: 600;
+  margin: 0;
+}
+
+.formSubtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  margin: 0;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  margin-top: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 0.1rem solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input::placeholder,
+textarea::placeholder,
+select:invalid {
+  color: rgba(71, 85, 105, 0.6);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 0.3rem rgba(60, 129, 105, 0.2);
+}
+
+.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 0.3rem rgba(220, 38, 38, 0.15);
+}
+
+.error-message {
+  font-size: var(--font-size-xs);
+  color: #dc2626;
+  margin: 0;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 8rem;
+}
+
+.helperText {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin: 0;
+  margin-top: var(--space-1);
+}
+
+.healthOptionsList {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  max-height: min(32rem, 48vh);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(60, 129, 105, 0.4) transparent;
+}
+
+.healthOptionsList::-webkit-scrollbar {
+  width: 0.6rem;
+}
+
+.healthOptionsList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.healthOptionsList::-webkit-scrollbar-thumb {
+  background: rgba(60, 129, 105, 0.32);
+  border-radius: 1rem;
+}
+
+.healthOption {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--space-3);
+  border: 0.1rem solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-elevated);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.healthOption input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.healthOption span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  font-weight: 500;
+}
+
+.healthOption span::before {
+  content: "";
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 0.6rem;
+  border: 0.12rem solid var(--color-border-strong, #94a3b8);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 0 transparent;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.healthOption.selected {
+  border-color: var(--color-brand);
+  background: linear-gradient(
+    135deg,
+    rgba(60, 129, 105, 0.12),
+    rgba(60, 129, 105, 0.08)
+  );
+  box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.18);
+  transform: translateY(-1px);
+}
+
+.healthOption.selected span::before {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='9' viewBox='0 0 12 9' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10.667.5 4.5 6.76 1.333 3.54 0 4.907 4.5 9 12 1.873z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 0.9rem;
+  box-shadow: inset 0 0 0 0.2rem rgba(255, 255, 255, 0.35);
+}
+
+.healthOption:hover {
+  border-color: var(--color-brand);
+  box-shadow: 0 1rem 2rem rgba(60, 129, 105, 0.14);
+}
+
+.healthOption:focus-within {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 0.28rem rgba(60, 129, 105, 0.25);
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.secondaryButton {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 0.1rem solid var(--color-border);
+  background: var(--color-elevated);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.secondaryButton:hover {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+  box-shadow: 0 0.8rem 1.6rem rgba(60, 129, 105, 0.16);
+}
+
+.secondaryButton:active {
+  transform: translateY(1px);
+}
+
+.buttonRow .secondaryButton,
+.buttonRow .nextButton {
+  flex: 0 1 12rem;
+  margin-top: 0;
+  width: auto;
+  padding: var(--space-3) var(--space-4);
+}
+
+.inlineFields {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.inlineFields > div,
+.inlineFields > select {
+  flex: 1 1 12rem;
+}
+
+.genderGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.genderBtn {
+  flex: wrap;
+  border: 0.1rem solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-elevated);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.genderBtn:hover {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.12);
+}
+
+.genderBtn.selected {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-surface);
+  box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.18);
+}
+
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.chipButton {
+  border: 0.1rem solid var(--color-border);
+  border-radius: 999px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-elevated);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.chipButton:hover:not(:disabled) {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+  box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.12);
+}
+
+.chipButton.selected {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-surface);
+  box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.18);
+  transform: translateY(-1px);
+}
+
+.chipButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+}
+
+#country {
+  width: 100%;
+}
+
+.inlineFields > .formField:has(#countryCode) {
+  flex: 0 0 10rem;
+}
+
+.inlineFields > .formField:has(#mobile) {
+  flex: 1 1 auto;
+}
+
+.nextButton {
+  margin-top: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-brand);
+  color: var(--color-surface);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nextButton:hover {
+  background: var(--color-brand-dark);
+  box-shadow: 0 1.2rem 2.4rem rgba(39, 96, 76, 0.2);
+}
+
+.nextButton:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 42rem) {
+  .personalFormContainer {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .header {
+    gap: var(--space-2);
+  }
+
+  .headerContent {
+    gap: var(--space-2);
+  }
+
+  .formBox {
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+  }
+
+  
+}
+
+@media (max-width: 28rem) {
+  .personalFormContainer {
+    padding: var(--space-5) var(--space-3);
+  }
+
+  .backButton {
+    --button-size: 3.4rem;
+  }
+
+  .formBox {
+    padding: var(--space-4);
+  }
+
+  .nextButton {
+    font-size: var(--font-size-sm);
+  }
+
+  .buttonRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .buttonRow .secondaryButton,
+  .buttonRow .nextButton {
+    width: 100%;
+  }
+}

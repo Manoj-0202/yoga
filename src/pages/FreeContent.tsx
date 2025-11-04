@@ -113,7 +113,7 @@ export const FreeContent = () => {
                   <h5>{lesson.title}</h5>
                   <span className="lesson-tag">{lesson.tag}</span>
                 </div>
-                <p>
+                <p className="para-content">
                   Set your goals for a personalized experience—or skip. Set your
                   goals for a personalized experience—or skip.
                 </p>

@@ -7,6 +7,7 @@ import { FreeContent } from './pages/FreeContent';
 import { FreeGuidedYoga } from './pages/FreeGuidedYoga';
 import { Meditation } from './pages/Meditation';
 import { PersonalisedYoga } from './pages/PersonalisedYoga';
+import { PersonalisedDetails } from './pages/PersonalisedDetails';
 
 const LOGIN_PATH = '/login';
 const OTP_PATH = '/otp';
@@ -15,6 +16,7 @@ const FREE_CONTENT_PATH = '/free-content';
 const FREE_GUIDED_YOGA_PATH = '/free-guided-yoga';
 const MEDITATION_PATH = '/meditation';
 const PERSONALISED_YOGA_PATH = '/personalised-yoga';
+const PERSONALISED_DETAILS_PATH = '/personalised-details';
 
 const getCurrentUrl = () =>
   `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -81,6 +83,10 @@ function App() {
 
   if (currentPath === PERSONALISED_YOGA_PATH) {
     return <PersonalisedYoga />;
+  }
+
+  if (currentPath === PERSONALISED_DETAILS_PATH) {
+    return <PersonalisedDetails />;
   }
 
   return (
