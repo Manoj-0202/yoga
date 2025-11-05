@@ -2,10 +2,9 @@ import React, { useEffect, useState } from "react";
 import "../styles/PersonalisedDetails.css";
 import { LeftIcon } from "../icons/LeftIcon";
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 const NO_SYMPTOM_OPTION = "No current symptoms";
 const NO_SURGERY_OPTION = "No past surgeries";
-const NO_FAMILY_HISTORY_OPTION = "No family history";
 const FAMILY_MEMBER_OPTIONS = ["Father", "Mother", "Siblings", "Grandparents", "Children", "Other"];
 const NO_SLEEP_PATTERN_OPTION = "No usual night routine";
 
@@ -215,7 +214,13 @@ export const PersonalisedDetails: React.FC = () => {
 
         const data = await response.json();
         if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(new Set([...data, NO_FAMILY_HISTORY_OPTION]));
+          const uniqueOptions = Array.from(
+            new Set(
+              data
+                .map((item) => (typeof item === "string" ? item.trim() : item))
+                .filter((item) => item !== null && item !== undefined && item !== "")
+            )
+          );
           setFamilyHistoryOptions(uniqueOptions);
         } else {
           throw new Error("Unexpected response shape");
@@ -448,20 +453,15 @@ export const PersonalisedDetails: React.FC = () => {
     return newErrors;
   };
 
-  const validateFamilyHistory = () => {
+const validateFamilyHistory = () => {
     const newErrors: Record<string, string> = {};
-    const noFamilyHistorySelected = formData.familyHistory.includes(NO_FAMILY_HISTORY_OPTION);
-    const selectedHistory = formData.familyHistory.filter((item) => item !== NO_FAMILY_HISTORY_OPTION);
-    if (selectedHistory.length === 0 && !formData.familyNotes.trim() && !noFamilyHistorySelected) {
+    if (formData.familyHistory.length === 0 && !formData.familyNotes.trim()) {
       newErrors.familyHistory = "Select a family condition or share details about family health.";
-    }
-    if (selectedHistory.length > 0 && formData.familyMembers.length === 0) {
-      newErrors.familyMembers = "Select the family members affected.";
     }
     return newErrors;
   };
 
-  const validatePhysicalMetrics = () => {
+  const validateLifestyleHabits = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.yogaExperience) {
       newErrors.yogaExperience = "Select your current yoga experience level.";
@@ -472,6 +472,11 @@ export const PersonalisedDetails: React.FC = () => {
     if (!formData.stayType) {
       newErrors.stayType = "Let us know where you stay.";
     }
+    return newErrors;
+  };
+
+  const validatePhysicalMetrics = () => {
+    const newErrors: Record<string, string> = {};
     if (!formData.stressLevel) {
       newErrors.stressLevel = "Select your current stress level.";
     }
@@ -560,33 +565,17 @@ export const PersonalisedDetails: React.FC = () => {
   const handleFamilyHistoryToggle = (value: string) => {
     setFormData((prev) => {
       const hasValue = prev.familyHistory.includes(value);
-      let updated: string[];
+      const updated = hasValue
+        ? prev.familyHistory.filter((item) => item !== value)
+        : [...prev.familyHistory, value];
 
-      if (value === NO_FAMILY_HISTORY_OPTION) {
-        updated = hasValue ? [] : [NO_FAMILY_HISTORY_OPTION];
-      } else if (hasValue) {
-        updated = prev.familyHistory.filter((item) => item !== value);
-      } else {
-        updated = [...prev.familyHistory.filter((item) => item !== NO_FAMILY_HISTORY_OPTION), value];
-      }
-
-      const resetMembers = updated.includes(NO_FAMILY_HISTORY_OPTION) ? [] : prev.familyMembers;
-      return { ...prev, familyHistory: updated, familyMembers: resetMembers };
+      return {
+        ...prev,
+        familyHistory: updated,
+        familyMembers: updated.length === 0 ? [] : prev.familyMembers,
+      };
     });
     clearFieldError("familyHistory");
-    clearFieldError("familyMembers");
-  };
-
-  const handleFamilyMemberToggle = (value: string) => {
-    setFormData((prev) => {
-      const hasValue = prev.familyMembers.includes(value);
-      const updated = hasValue
-        ? prev.familyMembers.filter((item) => item !== value)
-        : [...prev.familyMembers, value];
-
-      return { ...prev, familyMembers: updated };
-    });
-    clearFieldError("familyMembers");
   };
 
   const handleStressLevelSelect = (level: string, checked: boolean) => {
@@ -633,7 +622,7 @@ export const PersonalisedDetails: React.FC = () => {
     setErrors({});
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (currentStep === 1) {
@@ -713,7 +702,41 @@ export const PersonalisedDetails: React.FC = () => {
       }
 
       setErrors({});
-      alert(JSON.stringify(formData, null, 2));
+      setCurrentStep(8);
+      return;
+    }
+
+    if (currentStep === 8) {
+      const lifestyleErrors = validateLifestyleHabits();
+      if (Object.keys(lifestyleErrors).length > 0) {
+        setErrors(lifestyleErrors);
+        return;
+      }
+
+      setErrors({});
+      try {
+        const response = await fetch("http://54.234.26.129:8082/api/v1/users/online/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        alert("Form submitted successfully! " + JSON.stringify(result));
+        // Optionally, reset form or redirect
+        // setFormData(initialFormState);
+        // setCurrentStep(1);
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("Failed to submit form: " + (error as Error).message);
+      }
       return;
     }
   };
@@ -729,10 +752,6 @@ export const PersonalisedDetails: React.FC = () => {
   const isYogaGoalSelected = (value: string) => formData.yogaGoals.includes(value);
   const isSymptomSelected = (value: string) => formData.currentHealth.includes(value);
   const isSurgerySelected = (value: string) => formData.surgeries.includes(value);
-  const isFamilyMemberSelected = (value: string) => formData.familyMembers.includes(value);
-  const hasFamilyHistorySelection = formData.familyHistory.some(
-    (item) => item !== NO_FAMILY_HISTORY_OPTION
-  );
   const isStressLevelSelected = (value: string) => formData.stressLevel === value;
   const isFamilyHistorySelected = (value: string) => formData.familyHistory.includes(value);
   const isSleepPatternSelected = (value: string) => formData.sleepPattern === value;
@@ -752,12 +771,20 @@ export const PersonalisedDetails: React.FC = () => {
           <LeftIcon />
         </button>
         <div className="headerContent">
-          <p className="step">
-            {currentStep} of {TOTAL_STEPS}
-          </p>
-          <h2 className="brand">Nirvaana Yoga</h2>
+          <h2 className="brand">Nirva<span className="span-element">a</span>na Yoga</h2>
         </div>
       </header>
+      <div className="progress-bar-wrapper">
+        <p className="step">
+            {currentStep} of {TOTAL_STEPS}
+        </p>
+        <div className="progress-bar-container">
+            <div
+            className="progress-bar-fill"
+            style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
+            ></div>
+        </div>
+      </div>
 
       <form className="formBox" onSubmit={handleSubmit}>
         {currentStep === 1 && (
@@ -768,7 +795,7 @@ export const PersonalisedDetails: React.FC = () => {
             </p>
 
             <div className="formField">
-              <label htmlFor="firstName">First name *</label>
+              <label htmlFor="firstName">First name <span className="required-asterisk">*</span></label>
               <input
                 id="firstName"
                 type="text"
@@ -783,7 +810,7 @@ export const PersonalisedDetails: React.FC = () => {
             </div>
 
             <div className="formField">
-              <label htmlFor="lastName">Last name *</label>
+              <label htmlFor="lastName">Last name <span className="required-asterisk">*</span></label>
               <input
                 id="lastName"
                 type="text"
@@ -799,7 +826,7 @@ export const PersonalisedDetails: React.FC = () => {
 
             <div className="inlineFields">
               <div className="formField">
-                <label htmlFor="countryCode">Country *</label>
+                <label htmlFor="countryCode">Country <span className="required-asterisk">*</span></label>
                 <select
                   id="countryCode"
                   name="countryCode"
@@ -812,7 +839,7 @@ export const PersonalisedDetails: React.FC = () => {
                 </select>
               </div>
               <div className="formField">
-                <label htmlFor="mobile">Mobile number *</label>
+                <label htmlFor="mobile">Mobile number <span className="required-asterisk">*</span></label>
                 <input
                   id="mobile"
                   type="tel"
@@ -829,7 +856,7 @@ export const PersonalisedDetails: React.FC = () => {
             </div>
 
             <div className="formField">
-              <label htmlFor="email">Email *</label>
+              <label htmlFor="email">Email <span className="required-asterisk">*</span></label>
               <input
                 id="email"
                 type="email"
@@ -844,7 +871,7 @@ export const PersonalisedDetails: React.FC = () => {
             </div>
 
             <div className="formField">
-              <label>Gender *</label>
+              <label>Gender <span className="required-asterisk">*</span></label>
               <div className="genderGroup">
                 {["Male", "Female", "Other"].map((g) => (
                   <button
@@ -861,7 +888,7 @@ export const PersonalisedDetails: React.FC = () => {
             </div>
 
             <div className="formField">
-              <label>Date of birth *</label>
+              <label>Date of birth <span className="required-asterisk">*</span></label>
               <div className="inlineFields">
                 <select
                   name="day"
@@ -914,7 +941,7 @@ export const PersonalisedDetails: React.FC = () => {
             </div>
 
             <div className="formField">
-              <label htmlFor="city">City *</label>
+              <label htmlFor="city">City <span className="required-asterisk">*</span></label>
               <input
                 id="city"
                 type="text"
@@ -929,7 +956,7 @@ export const PersonalisedDetails: React.FC = () => {
             </div>
 
             <div className="formField">
-              <label htmlFor="country">Country *</label>
+              <label htmlFor="country">Country <span className="required-asterisk">*</span></label>
               <select
                 id="country"
                 name="country"
@@ -953,13 +980,13 @@ export const PersonalisedDetails: React.FC = () => {
 
         {currentStep === 2 && (
           <>
-            <h3 className="formTitle">Personal goals</h3>
+            <h3 className="formTitle">Your Personal goal!</h3>
             <p className="formSubtitle">
-              Tell us what you’d love to achieve so we can shape your practice around what matters most.
+              A few simple details will help Nirvaana craft sessions that truly fit you.
             </p>
 
             <div className="formField">
-              <label>Your goals *</label>
+              <label>Your goals <span className="required-asterisk">*</span></label>
               {isLoadingYogaGoals && <p className="helperText">Loading goals...</p>}
               {yogaGoalFetchError && <p className="error-message">{yogaGoalFetchError}</p>}
               {!isLoadingYogaGoals && !yogaGoalFetchError && (
@@ -980,17 +1007,21 @@ export const PersonalisedDetails: React.FC = () => {
                     </label>
                   ))}
                 </div>
+                
               )}
               {errors.yogaGoals && <p className="error-message">{errors.yogaGoals}</p>}
-              {!errors.yogaGoals && !isLoadingYogaGoals && !yogaGoalFetchError && (
-                <p className="helperText">Select all that resonate with you.</p>
-              )}
+            </div>
+            <div className="formField">
+              <textarea
+                id="healthNotes"
+                name="healthNotes"
+                value={formData.healthNotes}
+                onChange={handleChange}
+                placeholder="Tell us more..."
+              />
             </div>
 
             <div className="buttonRow">
-              <button type="button" className="secondaryButton" onClick={handlePreviousStep}>
-                Back
-              </button>
               <button className="nextButton" type="submit">
                 Next
               </button>
@@ -1000,13 +1031,13 @@ export const PersonalisedDetails: React.FC = () => {
 
         {currentStep === 3 && (
           <>
-            <h3 className="formTitle">Symptoms & concerns</h3>
+            <h3 className="formTitle">Current Health </h3>
             <p className="formSubtitle">
               A few simple details will help Nirvaana craft sessions that truly fit you.
             </p>
 
             <div className="formField">
-              <label>Current symptoms or concerns *</label>
+              <label>Physical health</label>
               {isLoadingSymptoms && <p className="helperText">Loading symptom options...</p>}
               {symptomFetchError && <p className="error-message">{symptomFetchError}</p>}
               {!isLoadingSymptoms && !symptomFetchError && (
@@ -1029,28 +1060,20 @@ export const PersonalisedDetails: React.FC = () => {
                 </div>
               )}
               {errors.currentHealth && <p className="error-message">{errors.currentHealth}</p>}
-              {!errors.currentHealth && !isLoadingSymptoms && !symptomFetchError && (
-                <p className="helperText">
-                  Select all that apply or choose '{NO_SYMPTOM_OPTION}' if you feel symptom free.
-                </p>
-              )}
             </div>
 
             <div className="formField">
-              <label htmlFor="healthNotes">Tell us more (optional)</label>
               <textarea
                 id="healthNotes"
                 name="healthNotes"
                 value={formData.healthNotes}
                 onChange={handleChange}
-                placeholder="Share any injuries, diagnoses, or areas you'd like us to focus on."
+                placeholder="Tell us more..."
               />
             </div>
 
             <div className="buttonRow">
-              <button type="button" className="secondaryButton" onClick={handlePreviousStep}>
-                Back
-              </button>
+
               <button className="nextButton" type="submit">
                 Next
               </button>
@@ -1066,7 +1089,7 @@ export const PersonalisedDetails: React.FC = () => {
             </p>
 
             <div className="formField">
-              <label>Past surgeries or conditions *</label>
+              <label>Surgeries & Injuries</label>
               {isLoadingSurgeries && <p className="helperText">Loading medical history options...</p>}
               {surgeryFetchError && <p className="error-message">{surgeryFetchError}</p>}
               {!isLoadingSurgeries && !surgeryFetchError && (
@@ -1089,29 +1112,20 @@ export const PersonalisedDetails: React.FC = () => {
                 </div>
               )}
               {errors.surgeries && <p className="error-message">{errors.surgeries}</p>}
-              {!errors.surgeries && !isLoadingSurgeries && !surgeryFetchError && (
-                <p className="helperText">
-                  Select all that apply or choose '{NO_SURGERY_OPTION}' if you have no medical history to
-                  note.
-                </p>
-              )}
             </div>
 
             <div className="formField">
-              <label htmlFor="surgeryNotes">Tell us more (optional)</label>
               <textarea
                 id="surgeryNotes"
                 name="surgeryNotes"
                 value={formData.surgeryNotes}
                 onChange={handleChange}
-                placeholder="Share any additional details your instructor should know."
+                placeholder="Tell us more..."
               />
             </div>
 
             <div className="buttonRow">
-              <button type="button" className="secondaryButton" onClick={handlePreviousStep}>
-                Back
-              </button>
+
               <button className="nextButton" type="submit">
                 Next
               </button>
@@ -1123,12 +1137,11 @@ export const PersonalisedDetails: React.FC = () => {
           <>
             <h3 className="formTitle">Family health history</h3>
             <p className="formSubtitle">
-              Let us know about any hereditary conditions so we can be mindful in your personalized
-              plan.
+             A few simple details will help Nirvaana craft sessions that truly fit you.
             </p>
 
             <div className="formField">
-              <label>Family health conditions *</label>
+              <label>Hereditary Conditions</label>
               {isLoadingFamilyHistory && <p className="helperText">Loading family history options...</p>}
               {familyHistoryFetchError && <p className="error-message">{familyHistoryFetchError}</p>}
               {!isLoadingFamilyHistory && !familyHistoryFetchError && (
@@ -1150,29 +1163,33 @@ export const PersonalisedDetails: React.FC = () => {
                   ))}
                 </div>
               )}
+              {!isLoadingFamilyHistory &&
+                !familyHistoryFetchError &&
+                familyHistoryOptions.length === 0 && (
+                  <p className="helperText">No hereditary conditions available right now.</p>
+                )}
+              {!errors.familyHistory &&
+                !isLoadingFamilyHistory &&
+                !familyHistoryFetchError &&
+                familyHistoryOptions.length > 0 && (
+                  <p className="helperText">
+                    Select all conditions that apply, or leave this blank and share details in the notes field below.
+                  </p>
+                )}
               {errors.familyHistory && <p className="error-message">{errors.familyHistory}</p>}
-              {!errors.familyHistory && !isLoadingFamilyHistory && !familyHistoryFetchError && (
-                <p className="helperText">
-                  Select all that apply or choose '{NO_FAMILY_HISTORY_OPTION}' if none apply.
-                </p>
-              )}
             </div>
-
             <div className="formField">
-              <label htmlFor="familyNotes">Tell us more (optional)</label>
               <textarea
                 id="familyNotes"
                 name="familyNotes"
                 value={formData.familyNotes}
                 onChange={handleChange}
-                placeholder="Share any family health background that would help us support you better."
+                placeholder="Tell us more... "
               />
             </div>
 
             <div className="buttonRow">
-              <button type="button" className="secondaryButton" onClick={handlePreviousStep}>
-                Back
-              </button>
+
               <button className="nextButton" type="submit">
                 Next
               </button>
@@ -1181,92 +1198,14 @@ export const PersonalisedDetails: React.FC = () => {
         )}
 
         {currentStep === 6 && (
-          <>
+           <>
             <h3 className="formTitle">Physical metrics</h3>
             <p className="formSubtitle">
-              Tell us how you're feeling right now so we can balance intensity and recovery in your practice.
+              Tell us how you're feeling so we can tailor recovery and intensity for you.
             </p>
 
             <div className="formField">
-              <label>Your yoga experience *</label>
-              {isLoadingYogaExperience && <p className="helperText">Loading experience levels...</p>}
-              {yogaExperienceFetchError && <p className="error-message">{yogaExperienceFetchError}</p>}
-              {!isLoadingYogaExperience && !yogaExperienceFetchError && (
-                <div className="healthOptionsList">
-                  {yogaExperienceOptions.map((option) => (
-                    <label
-                      key={option}
-                      className={`healthOption ${isYogaExperienceSelected(option) ? "selected" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        name="yogaExperience"
-                        value={option}
-                        checked={isYogaExperienceSelected(option)}
-                        onChange={() => handleYogaExperienceSelect(option)}
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-              {errors.yogaExperience && <p className="error-message">{errors.yogaExperience}</p>}
-            </div>
-
-            <div className="formField">
-              <label>Your typical meal type *</label>
-              {isLoadingMealTypes && <p className="helperText">Loading meal types...</p>}
-              {mealTypeFetchError && <p className="error-message">{mealTypeFetchError}</p>}
-              {!isLoadingMealTypes && !mealTypeFetchError && (
-                <div className="healthOptionsList">
-                  {mealTypeOptions.map((option) => (
-                    <label
-                      key={option}
-                      className={`healthOption ${isMealTypeSelected(option) ? "selected" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        name="mealType"
-                        value={option}
-                        checked={isMealTypeSelected(option)}
-                        onChange={() => handleMealTypeSelect(option)}
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-              {errors.mealType && <p className="error-message">{errors.mealType}</p>}
-            </div>
-
-            <div className="formField">
-              <label>Where do you stay? *</label>
-              {isLoadingStayTypes && <p className="helperText">Loading stay types...</p>}
-              {stayTypeFetchError && <p className="error-message">{stayTypeFetchError}</p>}
-              {!isLoadingStayTypes && !stayTypeFetchError && (
-                <div className="healthOptionsList">
-                  {stayTypeOptions.map((option) => (
-                    <label
-                      key={option}
-                      className={`healthOption ${isStayTypeSelected(option) ? "selected" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        name="stayType"
-                        value={option}
-                        checked={isStayTypeSelected(option)}
-                        onChange={() => handleStayTypeSelect(option)}
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-              {errors.stayType && <p className="error-message">{errors.stayType}</p>}
-            </div>
-
-            <div className="formField">
-              <label>Current stress level *</label>
+              <label>Stress level </label>
               {isLoadingStressLevels && <p className="helperText">Loading stress levels...</p>}
               {stressLevelFetchError && <p className="error-message">{stressLevelFetchError}</p>}
               {!isLoadingStressLevels && !stressLevelFetchError && (
@@ -1274,7 +1213,7 @@ export const PersonalisedDetails: React.FC = () => {
                   {stressLevelOptions.map((level) => (
                     <label
                       key={level}
-                      className={`healthOption ${isStressLevelSelected(level) ? "selected" : ""}`}
+                      className={`healthOption healthOption--radio ${isStressLevelSelected(level) ? "selected" : ""}`}
                     >
                       <input
                         type="checkbox"
@@ -1292,25 +1231,23 @@ export const PersonalisedDetails: React.FC = () => {
             </div>
 
             <div className="buttonRow">
-              <button type="button" className="secondaryButton" onClick={handlePreviousStep}>
-                Back
-              </button>
               <button className="nextButton" type="submit">
                 Next
               </button>
             </div>
           </>
+          
         )}
 
         {currentStep === 7 && (
-          <>
+           <>
             <h3 className="formTitle">Night routine</h3>
             <p className="formSubtitle">
               A quick snapshot of your evenings helps us understand how well you're resting.
             </p>
 
             <div className="formField">
-              <label>How would you describe your current sleep pattern? *</label>
+              <label>How would you describe your current sleep pattern? <span className="required-asterisk">*</span></label>
               {isLoadingSleepPatterns && <p className="helperText">Loading night routine options...</p>}
               {sleepPatternFetchError && <p className="error-message">{sleepPatternFetchError}</p>}
               {!isLoadingSleepPatterns && !sleepPatternFetchError && (
@@ -1318,7 +1255,7 @@ export const PersonalisedDetails: React.FC = () => {
                   {sleepPatternOptions.map((pattern) => (
                     <label
                       key={pattern}
-                      className={`healthOption ${isSleepPatternSelected(pattern) ? "selected" : ""}`}
+                      className={`healthOption healthOption--radio ${isSleepPatternSelected(pattern) ? "selected" : ""}`}
                     >
                       <input
                         type="checkbox"
@@ -1339,11 +1276,101 @@ export const PersonalisedDetails: React.FC = () => {
                 </p>
               )}
             </div>
-
-            <div className="buttonRow">
-              <button type="button" className="secondaryButton" onClick={handlePreviousStep}>
-                Back
+              <div className="buttonRow">
+              <button className="nextButton" type="submit">
+                Next
               </button>
+            </div>
+            
+          </>
+        )}
+
+        {currentStep === 8 && (
+         
+          <>
+            <h3 className="formTitle">Lifestyle and habits</h3>
+            <p className="formSubtitle">
+              A few simple details will help Nirvaana craft sessions that truly fit you.
+            </p>
+
+            <div className="formField">
+              <label>Your yoga experience <span className="required-asterisk">*</span></label>
+              {isLoadingYogaExperience && <p className="helperText">Loading experience levels...</p>}
+              {yogaExperienceFetchError && <p className="error-message">{yogaExperienceFetchError}</p>}
+              {!isLoadingYogaExperience && !yogaExperienceFetchError && (
+                <div className="healthOptionsList">
+                  {yogaExperienceOptions.map((option) => (
+                    <label
+                      key={option}
+                      className={`healthOption healthOption--radio ${isYogaExperienceSelected(option) ? "selected" : ""}`}
+                    >
+                      <input
+                        type="checkbox"
+                        name="yogaExperience"
+                        value={option}
+                        checked={isYogaExperienceSelected(option)}
+                        onChange={() => handleYogaExperienceSelect(option)}
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              {errors.yogaExperience && <p className="error-message">{errors.yogaExperience}</p>}
+            </div>
+
+            <div className="formField">
+              <label>Meal type <span className="required-asterisk">*</span></label>
+              {isLoadingMealTypes && <p className="helperText">Loading meal types...</p>}
+              {mealTypeFetchError && <p className="error-message">{mealTypeFetchError}</p>}
+              {!isLoadingMealTypes && !mealTypeFetchError && (
+                <div className="healthOptionsList">
+                  {mealTypeOptions.map((option) => (
+                    <label
+                      key={option}
+                      className={`healthOption healthOption--radio ${isMealTypeSelected(option) ? "selected" : ""}`}
+                    >
+                      <input
+                        type="checkbox"
+                        name="mealType"
+                        value={option}
+                        checked={isMealTypeSelected(option)}
+                        onChange={() => handleMealTypeSelect(option)}
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              {errors.mealType && <p className="error-message">{errors.mealType}</p>}
+            </div>
+
+            <div className="formField">
+              <label>Where do you stay? <span className="required-asterisk">*</span></label>
+              {isLoadingStayTypes && <p className="helperText">Loading stay types...</p>}
+              {stayTypeFetchError && <p className="error-message">{stayTypeFetchError}</p>}
+              {!isLoadingStayTypes && !stayTypeFetchError && (
+                <div className="healthOptionsList">
+                  {stayTypeOptions.map((option) => (
+                    <label
+                      key={option}
+                      className={`healthOption healthOption--radio ${isStayTypeSelected(option) ? "selected" : ""}`}
+                    >
+                      <input
+                        type="checkbox"
+                        name="stayType"
+                        value={option}
+                        checked={isStayTypeSelected(option)}
+                        onChange={() => handleStayTypeSelect(option)}
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              {errors.stayType && <p className="error-message">{errors.stayType}</p>}
+            </div>
+            <div className="buttonRow">
               <button className="nextButton" type="submit">
                 Submit
               </button>

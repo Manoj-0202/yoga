@@ -24,10 +24,6 @@ export const Home: React.FC = () => {
   if (showWelcome) {
     return (
       <div className="welcome-container">
-        <button className="back-btn">
-          <span className="arrow"></span>
-        </button>
-
         <div className="welcome-image-section">
           <img src={WelcomeImage} alt="Yoga Pose" className="welcome-hero" />
         </div>
@@ -52,6 +48,7 @@ export const Home: React.FC = () => {
     <div className="home-container">
       <div className="home-logo-overlay">
         <img src={Logo} alt="Nirvaana Yoga Logo" className="home-logo" />
+        <p className='loading'> LOADING </p>
         <div className="progress-bar-container">
           <div className="progress-bar-fill" style={{ width: `${progress}%` }}></div>
         </div>
