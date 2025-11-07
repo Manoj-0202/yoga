@@ -3,6 +3,9 @@ import "../styles/PersonalisedDetails.css";
 import { LeftIcon } from "../icons/LeftIcon";
 import { Modal } from "../components/Modal";
 
+
+const API_BASE_URL = "http://54.234.26.129:8082";
+const API_ROOT = API_BASE_URL.replace(/\/$/, "");
 const TOTAL_STEPS = 9;
 const NO_SYMPTOM_OPTION = "No current symptoms";
 const NO_SURGERY_OPTION = "No past surgeries";
@@ -81,6 +84,7 @@ export const PersonalisedDetails: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(true);
+  
   const [symptomOptions, setSymptomOptions] = useState<string[]>([]);
   const [isLoadingSymptoms, setIsLoadingSymptoms] = useState(false);
   const [symptomFetchError, setSymptomFetchError] = useState<string | null>(null);
@@ -115,6 +119,8 @@ export const PersonalisedDetails: React.FC = () => {
     setIsModalOpen(true);
   }, []);
 
+  
+
   useEffect(() => {
     const symptomController = new AbortController();
     const surgeryController = new AbortController();
@@ -131,7 +137,7 @@ export const PersonalisedDetails: React.FC = () => {
       setYogaGoalFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/yoga-goals", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/yoga-goals`, {
           signal: yogaGoalController.signal,
         });
 
@@ -164,7 +170,7 @@ export const PersonalisedDetails: React.FC = () => {
       setSymptomFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/symptoms", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/symptoms`, {
           signal: symptomController.signal,
         });
 
@@ -195,7 +201,7 @@ export const PersonalisedDetails: React.FC = () => {
       setSurgeryFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/surgeries", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/surgeries`, {
           signal: surgeryController.signal,
         });
 
@@ -226,7 +232,7 @@ export const PersonalisedDetails: React.FC = () => {
       setFamilyHistoryFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/hereditaries", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/hereditaries`, {
           signal: familyHistoryController.signal,
         });
 
@@ -263,7 +269,7 @@ export const PersonalisedDetails: React.FC = () => {
       setStressLevelFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/stress-level", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/stress-level`, {
           signal: stressLevelController.signal,
         });
 
@@ -293,7 +299,7 @@ export const PersonalisedDetails: React.FC = () => {
       setSleepPatternFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/sleep-patterns", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/sleep-patterns`, {
           signal: sleepPatternController.signal,
         });
 
@@ -325,7 +331,7 @@ export const PersonalisedDetails: React.FC = () => {
       setYogaExperienceFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/user-levels", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/user-levels`, {
           signal: yogaExperienceController.signal,
         });
 
@@ -356,7 +362,7 @@ export const PersonalisedDetails: React.FC = () => {
       setMealTypeFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/meal-types", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/meal-types`, {
           signal: mealTypeController.signal,
         });
 
@@ -387,7 +393,7 @@ export const PersonalisedDetails: React.FC = () => {
       setStayTypeFetchError(null);
 
       try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/common/stay-types", {
+        const response = await fetch(`${API_ROOT}/api/v1/common/stay-types`, {
           signal: stayTypeController.signal,
         });
 
@@ -440,6 +446,7 @@ export const PersonalisedDetails: React.FC = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!selectedFile) newErrors.image = "Profile picture is required";
     if (!formData.mobile.trim()) newErrors.mobile = "Mobile number is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     if (!formData.gender) newErrors.gender = "Gender is required";
@@ -827,8 +834,7 @@ const validateFamilyHistory = () => {
         status: "PENDING",
       };
 
-      const API_BASE_URL = "http://54.234.26.129:8082";
-      const requestUrl = `${API_BASE_URL.replace(/\/$/, "")}/api/v1/users/online/create`;
+      const requestUrl = `${API_ROOT}/api/v1/users/online/create`;
 
       console.log("Final payload:", payload);
       console.log("Submitting payload to:", requestUrl);
@@ -929,7 +935,7 @@ const validateFamilyHistory = () => {
           <>
             <h3 className="formTitle">Personal info</h3>
             <p className="formSubtitle">
-              A few simple details will help Nirvaana craft sessions that truly fit you.
+              Your journey with Nirvaana begins here. Share a few details about yourself so we can craft yoga sessions that truly fit your body , mind and lifestyle .  
             </p>
 
             <div className="formField profile-picture-container">
@@ -941,7 +947,7 @@ const validateFamilyHistory = () => {
                     <span>+</span>
                   )}
                 </div>
-                Profile picture
+                Profile picture <span className="required-asterisk">*</span>
               </label>
               <input
                 id="image"
@@ -950,7 +956,9 @@ const validateFamilyHistory = () => {
                 accept="image/*"
                 onChange={handleFileChange}
                 style={{ display: "none" }}
+                required
               />
+              {errors.image && <p className="error-message">{errors.image}</p>}
             </div>
 
             <div className="formField">
@@ -1175,7 +1183,7 @@ const validateFamilyHistory = () => {
             </p>
 
             <div className="formField">
-              <label>Your goals <span className="required-asterisk">*</span></label>
+              <label className="label-head">Your goals <span className="required-asterisk">*</span></label>
               {isLoadingYogaGoals && <p className="helperText">Loading goals...</p>}
               {yogaGoalFetchError && <p className="error-message">{yogaGoalFetchError}</p>}
               {!isLoadingYogaGoals && !yogaGoalFetchError && (
@@ -1206,7 +1214,7 @@ const validateFamilyHistory = () => {
                 name="yogaGoalNotes"
                 value={formData.yogaGoalNotes}
                 onChange={handleChange}
-                placeholder="Tell us more about your goals..."
+                placeholder="Tell us more..."
               />
             </div>
 
@@ -1226,7 +1234,7 @@ const validateFamilyHistory = () => {
             </p>
 
             <div className="formField">
-              <label>Physical health</label>
+              <label className="label-head">Physical health</label>
               {isLoadingSymptoms && <p className="helperText">Loading symptom options...</p>}
               {symptomFetchError && <p className="error-message">{symptomFetchError}</p>}
               {!isLoadingSymptoms && !symptomFetchError && (
@@ -1278,7 +1286,7 @@ const validateFamilyHistory = () => {
             </p>
 
             <div className="formField">
-              <label>Surgeries & Injuries</label>
+              <label className="label-head">Surgeries & Injuries</label>
               {isLoadingSurgeries && <p className="helperText">Loading medical history options...</p>}
               {surgeryFetchError && <p className="error-message">{surgeryFetchError}</p>}
               {!isLoadingSurgeries && !surgeryFetchError && (
@@ -1330,7 +1338,7 @@ const validateFamilyHistory = () => {
             </p>
 
             <div className="formField">
-              <label>Hereditary Conditions</label>
+              <label className="label-head">Hereditary Conditions</label>
               {isLoadingFamilyHistory && <p className="helperText">Loading family history options...</p>}
               {familyHistoryFetchError && <p className="error-message">{familyHistoryFetchError}</p>}
               {!isLoadingFamilyHistory && !familyHistoryFetchError && (
@@ -1361,9 +1369,7 @@ const validateFamilyHistory = () => {
                 !isLoadingFamilyHistory &&
                 !familyHistoryFetchError &&
                 familyHistoryOptions.length > 0 && (
-                  <p className="helperText">
-                    Select all conditions that apply, or leave this blank and share details in the notes field below.
-                  </p>
+                  <p className="helperText"> </p>
                 )}
               {errors.familyHistory && <p className="error-message">{errors.familyHistory}</p>}
             </div>
@@ -1390,11 +1396,11 @@ const validateFamilyHistory = () => {
            <>
             <h3 className="formTitle">Physical metrics</h3>
             <p className="formSubtitle">
-              Tell us how you're feeling so we can tailor recovery and intensity for you.
+              A few simple details will help Nirvaana craft sessions that truly fit you.
             </p>
 
             <div className="formField">
-              <label>Stress level </label>
+              <label className="label-head">Stress level </label>
               {isLoadingStressLevels && <p className="helperText">Loading stress levels...</p>}
               {stressLevelFetchError && <p className="error-message">{stressLevelFetchError}</p>}
               {!isLoadingStressLevels && !stressLevelFetchError && (
@@ -1424,7 +1430,7 @@ const validateFamilyHistory = () => {
                 name="physicalMetricsNotes"
                 value={formData.physicalMetricsNotes}
                 onChange={handleChange}
-                placeholder="Tell us more about your physical metrics..."
+                placeholder="Tell us more..."
               />
             </div>
 
@@ -1441,7 +1447,7 @@ const validateFamilyHistory = () => {
            <>
             <h3 className="formTitle">Night routine</h3>
             <p className="formSubtitle">
-              A quick snapshot of your evenings helps us understand how well you're resting.
+              A few simple details will help Nirvaana craft sessions that truly fit you.
             </p>
 
             <div className="formField">
@@ -1470,7 +1476,6 @@ const validateFamilyHistory = () => {
               {errors.sleepPattern && <p className="error-message">{errors.sleepPattern}</p>}
               {!errors.sleepPattern && !isLoadingSleepPatterns && !sleepPatternFetchError && (
                 <p className="helperText">
-                  Select one option or choose '{NO_SLEEP_PATTERN_OPTION}' if no routine fits.
                 </p>
               )}
             </div>
@@ -1480,7 +1485,7 @@ const validateFamilyHistory = () => {
                 name="nightRoutineNotes"
                 value={formData.nightRoutineNotes}
                 onChange={handleChange}
-                placeholder="Tell us more about your night routine..."
+                placeholder="Tell us more..."
               />
             </div>
               <div className="buttonRow">
@@ -1501,7 +1506,7 @@ const validateFamilyHistory = () => {
             </p>
 
             <div className="formField">
-              <label>Your yoga experience <span className="required-asterisk">*</span></label>
+              <label className="label-head">Your yoga experience <span className="required-asterisk">*</span></label>
               {isLoadingYogaExperience && <p className="helperText">Loading experience levels...</p>}
               {yogaExperienceFetchError && <p className="error-message">{yogaExperienceFetchError}</p>}
               {!isLoadingYogaExperience && !yogaExperienceFetchError && (
@@ -1527,7 +1532,7 @@ const validateFamilyHistory = () => {
             </div>
 
             <div className="formField">
-              <label>Meal type <span className="required-asterisk">*</span></label>
+              <label className="label-head">Meal type <span className="required-asterisk">*</span></label>
               {isLoadingMealTypes && <p className="helperText">Loading meal types...</p>}
               {mealTypeFetchError && <p className="error-message">{mealTypeFetchError}</p>}
               {!isLoadingMealTypes && !mealTypeFetchError && (
@@ -1553,7 +1558,7 @@ const validateFamilyHistory = () => {
             </div>
 
             <div className="formField">
-              <label>Where do you stay? <span className="required-asterisk">*</span></label>
+              <label className="label-head">Where do you stay? <span className="required-asterisk">*</span></label>
               {isLoadingStayTypes && <p className="helperText">Loading stay types...</p>}
               {stayTypeFetchError && <p className="error-message">{stayTypeFetchError}</p>}
               {!isLoadingStayTypes && !stayTypeFetchError && (
@@ -1579,24 +1584,12 @@ const validateFamilyHistory = () => {
             </div>
 
             <div className="formField">
-              <label htmlFor="availability">Preferred availability</label>
-              <input
-                id="availability"
-                type="text"
-                name="availability"
-                value={formData.availability}
-                onChange={handleChange}
-                placeholder="Morning, Afternoon, Evening..."
-              />
-            </div>
-
-            <div className="formField">
               <textarea
                 id="lifestyleNotes"
                 name="lifestyleNotes"
                 value={formData.lifestyleNotes}
                 onChange={handleChange}
-                placeholder="Tell us more about your lifestyle and habits..."
+                placeholder="Tell us more..."
               />
             </div>
             <div className="buttonRow">

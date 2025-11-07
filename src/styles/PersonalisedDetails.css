@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: clamp(var(--space-6), 6vw, var(--space-8));
-  background: linear-gradient(180deg, var(--color-elevated) 0%, var(--color-surface) 100%);
+  background: #ffffff;
   color: var(--color-text-primary);
 }
 
@@ -41,19 +41,15 @@
   justify-content: center;
   width: var(--button-size);
   height: var(--button-size);
-  border: 0.1rem solid var(--color-border);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--color-brand);
+  background: none;          /* 🔹 remove background */
+  border: none;              /* 🔹 remove border */
+  color: var(--color-brand); /* icon color */
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease,
-    transform 0.2s ease;
+  transition: color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .backButton:hover {
-  border-color: var(--color-brand);
-  color: var(--color-brand-dark);
-  box-shadow: 0 0.8rem 1.6rem rgba(60, 129, 105, 0.16);
+  color: var(--color-brand-dark); /* subtle hover color change */
   transform: translateY(-1px);
 }
 
@@ -61,6 +57,7 @@
   outline: none;
   box-shadow: 0 0 0 0.3rem rgba(60, 129, 105, 0.28);
 }
+
 
 .angleIcon {
   width: clamp(1.6rem, 2vw, 2.2rem);
@@ -106,9 +103,9 @@
 
 .formBox {
   width: min(100%, 46rem);
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
   padding: clamp(var(--space-6), 8vw, var(--space-7));
   display: flex;
   flex-direction: column;
@@ -122,25 +119,37 @@
 }
 
 .formTitle {
-  font-size: var(--font-size-md);
-  color: var(--color-brand-dark);
+  font-size: 22px;
+  color:#3C8169;
   font-weight: 600;
   margin: 0;
+  font-family: "Roboto";
+  font-weight: 500;
+  letter-spacing: -2%;
 }
 
 .formSubtitle {
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: #667085;
   line-height: 1.6;
   margin: 0;
+  font-family: "Roboto";
+  font-weight: 400;
 }
 
 label {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   letter-spacing: 0.04em;
-  font-weight: 600;
+  font-weight: 500;
   margin: 0;
+}
+
+.label-head{
+  font-family: 21px;
+  font-weight: 500;
+  color:#3C8169;
+  font-size: 15px;
 }
 
 input,
@@ -149,11 +158,11 @@ textarea {
   width: 100%;
   margin-top: var(--space-1);
   padding: var(--space-3);
-  border-radius: var(--radius-md);
-  border: 0.1rem solid var(--color-border);
+  border-radius:8px;
+  border: 1px solid #D0D5DD;
   background: var(--color-surface);
   font-size: var(--font-size-base);
-  color: var(--color-text-primary);
+  color: #98A;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -184,7 +193,7 @@ textarea:focus {
 
 textarea {
   resize: vertical;
-  min-height: 8rem;
+  min-height: 123px;
 }
 
 .helperText {
@@ -196,7 +205,7 @@ textarea {
 
 .healthOptionsList {
   display: grid;
-  gap: var(--space-2);
+  gap: 8px;
   margin-top: var(--space-2);
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
@@ -218,9 +227,7 @@ textarea {
   position: relative;
   display: flex;
   align-items: center;
-  padding: var(--space-3);
-  border: 0.1rem solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: var(--space-3) 0;
   background: transparent;
   font-size: var(--font-size-sm);
   cursor: pointer;
@@ -244,15 +251,15 @@ textarea {
   gap: var(--space-2);
   flex: 1;
   font-weight: 500;
+  
 }
 
 .healthOption span::before {
   content: "";
   width: 1.4rem;
   height: 1.4rem;
-  border-radius: 0;
-  border: 0.12rem solid var(--color-border-strong, #94a3b8);
-  background: var(--color-surface);
+  border-radius: 4px;
+  border: 1px solid #D3D3D3;
   box-shadow: inset 0 0 0 0 transparent;
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
@@ -266,14 +273,8 @@ textarea {
 }
 
 .healthOption.selected {
-  border-color: var(--color-brand);
-  background: linear-gradient(
-    135deg,
-    rgba(60, 129, 105, 0.12),
-    rgba(60, 129, 105, 0.08)
-  );
-  box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.18);
-  transform: translateY(-1px);
+  border-color: transparent;
+  transform: none;
 }
 
 .healthOption.selected span::before {
@@ -283,18 +284,18 @@ textarea {
   background-repeat: no-repeat;
   background-position: center;
   background-size: 0.9rem;
-  box-shadow: inset 0 0 0 0.2rem rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.18);
 }
 
-.healthOption:hover {
+/* .healthOption:hover {
   border-color: var(--color-brand);
   box-shadow: 0 1rem 2rem rgba(60, 129, 105, 0.14);
-}
+} */
 
 .healthOption:focus-within {
   outline: none;
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 0.28rem rgba(60, 129, 105, 0.25);
+  /* border-color: var(--color-brand); */
+  /* box-shadow: 0 0 0 0.28rem rgba(60, 129, 105, 0.25); */
 }
 
 .buttonRow {
@@ -350,8 +351,8 @@ textarea {
 
 .genderGroup {
   display: flex;
-
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .genderBtn {
@@ -359,7 +360,7 @@ textarea {
   border: 0.1rem solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-3);
-  background: var(--color-elevated);
+  background: transparent;
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -374,9 +375,9 @@ textarea {
 }
 
 .genderBtn.selected {
-  background: var(--color-brand);
+  background: transparent;
   border-color: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--color-brand);
   box-shadow: 0 0 0 0.2rem rgba(60, 129, 105, 0.18);
 }
 
@@ -435,10 +436,10 @@ textarea {
 
 .nextButton {
   margin-top: var(--space-2);
-  padding: var(--space-1) var(--space-4);
-  height: 30px;
+  padding: var(--space-2) var(--space-5); /* slightly more padding for balance */
+  height: 40px; /* 🔹 increased height */
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   background: var(--color-brand);
   color: var(--color-surface);
   font-size: var(--font-size-base);
@@ -447,6 +448,7 @@ textarea {
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 
 .nextButton:hover {
   background: var(--color-brand-dark);
