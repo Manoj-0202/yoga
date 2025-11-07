@@ -46,6 +46,67 @@ type FormState = {
   availability: string;
 };
 
+type EnumValue = string | { name?: string; status?: string | null };
+
+type EnumResponse = {
+  groupName?: string;
+  values?: EnumValue[];
+};
+
+const extractActiveEnumNames = (values: EnumValue[]): string[] => {
+  const unique: string[] = [];
+
+  values.forEach((value) => {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) unique.push(trimmed);
+      return;
+    }
+
+    if (value && typeof value === "object") {
+      const { name, status } = value;
+      if (
+        typeof name === "string" &&
+        (!status || (typeof status === "string" && status.toUpperCase() === "ACTIVE"))
+      ) {
+        const trimmed = name.trim();
+        if (trimmed) {
+          unique.push(trimmed);
+        }
+      }
+    }
+  });
+
+  return Array.from(new Set(unique));
+};
+
+const fetchEnumGroup = async (groupName: string, signal: AbortSignal) => {
+  const encodedGroup = encodeURIComponent(groupName.trim());
+  const response = await fetch(`${API_ROOT}/api/v1/enum/${encodedGroup}`, { signal });
+  if (!response.ok) {
+    throw new Error(`Request for ${groupName} failed with status ${response.status}`);
+  }
+
+  const data = await response.json();
+  let values: EnumValue[] | null = null;
+
+  if (Array.isArray(data)) {
+    values = data as EnumValue[];
+  } else if (
+    data &&
+    typeof data === "object" &&
+    Array.isArray((data as EnumResponse).values)
+  ) {
+    values = (data as EnumResponse).values as EnumValue[];
+  }
+
+  if (!values) {
+    throw new Error(`Unexpected response for enum group ${groupName}`);
+  }
+
+  return extractActiveEnumNames(values);
+};
+
 export const PersonalisedDetails: React.FC = () => {
   const [formData, setFormData] = useState<FormState>({
     firstName: "",
@@ -112,6 +173,9 @@ export const PersonalisedDetails: React.FC = () => {
   const [stayTypeOptions, setStayTypeOptions] = useState<string[]>([]);
   const [isLoadingStayTypes, setIsLoadingStayTypes] = useState(false);
   const [stayTypeFetchError, setStayTypeFetchError] = useState<string | null>(null);
+  const [genderOptions, setGenderOptions] = useState<string[]>([]);
+  const [isLoadingGenders, setIsLoadingGenders] = useState(false);
+  const [genderFetchError, setGenderFetchError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -131,29 +195,15 @@ export const PersonalisedDetails: React.FC = () => {
     const yogaExperienceController = new AbortController();
     const mealTypeController = new AbortController();
     const stayTypeController = new AbortController();
+    const genderController = new AbortController();
 
     const fetchYogaGoalOptions = async () => {
       setIsLoadingYogaGoals(true);
       setYogaGoalFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/yoga-goals`, {
-          signal: yogaGoalController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(
-            new Set(data.map((item) => (typeof item === "string" ? item.trim() : item)))
-          );
-          setYogaGoalOptions(uniqueOptions.filter(Boolean));
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Yoga Goals", yogaGoalController.signal);
+        setYogaGoalOptions(options);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -170,21 +220,11 @@ export const PersonalisedDetails: React.FC = () => {
       setSymptomFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/symptoms`, {
-          signal: symptomController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(new Set([...data, NO_SYMPTOM_OPTION]));
-          setSymptomOptions(uniqueOptions);
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Symptoms", symptomController.signal);
+        const finalOptions = options.includes(NO_SYMPTOM_OPTION)
+          ? options
+          : [...options, NO_SYMPTOM_OPTION];
+        setSymptomOptions(finalOptions);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -201,21 +241,11 @@ export const PersonalisedDetails: React.FC = () => {
       setSurgeryFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/surgeries`, {
-          signal: surgeryController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(new Set([...data, NO_SURGERY_OPTION]));
-          setSurgeryOptions(uniqueOptions);
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Surgeries", surgeryController.signal);
+        const finalOptions = options.includes(NO_SURGERY_OPTION)
+          ? options
+          : [...options, NO_SURGERY_OPTION];
+        setSurgeryOptions(finalOptions);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -232,27 +262,8 @@ export const PersonalisedDetails: React.FC = () => {
       setFamilyHistoryFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/hereditaries`, {
-          signal: familyHistoryController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(
-            new Set(
-              data
-                .map((item) => (typeof item === "string" ? item.trim() : item))
-                .filter((item) => item !== null && item !== undefined && item !== "")
-            )
-          );
-          setFamilyHistoryOptions(uniqueOptions);
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Hereditary", familyHistoryController.signal);
+        setFamilyHistoryOptions(options);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -269,20 +280,8 @@ export const PersonalisedDetails: React.FC = () => {
       setStressLevelFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/stress-level`, {
-          signal: stressLevelController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setStressLevelOptions(data);
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Stress Level", stressLevelController.signal);
+        setStressLevelOptions(options);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -299,22 +298,11 @@ export const PersonalisedDetails: React.FC = () => {
       setSleepPatternFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/sleep-patterns`, {
-          signal: sleepPatternController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const sanitized = data.map((item) => (typeof item === "string" ? item.trim() : item));
-          const uniqueOptions = Array.from(new Set([...sanitized.filter(Boolean), NO_SLEEP_PATTERN_OPTION]));
-          setSleepPatternOptions(uniqueOptions);
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Sleep Patterns", sleepPatternController.signal);
+        const finalOptions = options.includes(NO_SLEEP_PATTERN_OPTION)
+          ? options
+          : [...options, NO_SLEEP_PATTERN_OPTION];
+        setSleepPatternOptions(finalOptions);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -331,21 +319,8 @@ export const PersonalisedDetails: React.FC = () => {
       setYogaExperienceFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/user-levels`, {
-          signal: yogaExperienceController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(new Set(data.map((item) => (typeof item === "string" ? item.trim() : item))));
-          setYogaExperienceOptions(uniqueOptions.filter(Boolean));
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Experience Level", yogaExperienceController.signal);
+        setYogaExperienceOptions(options);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -362,21 +337,8 @@ export const PersonalisedDetails: React.FC = () => {
       setMealTypeFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/meal-types`, {
-          signal: mealTypeController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(new Set(data.map((item) => (typeof item === "string" ? item.trim() : item))));
-          setMealTypeOptions(uniqueOptions.filter(Boolean));
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Meal Type", mealTypeController.signal);
+        setMealTypeOptions(options);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -393,21 +355,8 @@ export const PersonalisedDetails: React.FC = () => {
       setStayTypeFetchError(null);
 
       try {
-        const response = await fetch(`${API_ROOT}/api/v1/common/stay-types`, {
-          signal: stayTypeController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const uniqueOptions = Array.from(new Set(data.map((item) => (typeof item === "string" ? item.trim() : item))));
-          setStayTypeOptions(uniqueOptions.filter(Boolean));
-        } else {
-          throw new Error("Unexpected response shape");
-        }
+        const options = await fetchEnumGroup("Stay Type", stayTypeController.signal);
+        setStayTypeOptions(options);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
@@ -416,6 +365,24 @@ export const PersonalisedDetails: React.FC = () => {
         setStayTypeFetchError("We couldn't load stay types. Please try again shortly.");
       } finally {
         setIsLoadingStayTypes(false);
+      }
+    };
+
+    const fetchGenderOptions = async () => {
+      setIsLoadingGenders(true);
+      setGenderFetchError(null);
+
+      try {
+        const options = await fetchEnumGroup("Gender", genderController.signal);
+        setGenderOptions(options);
+      } catch (error) {
+        if ((error as Error).name === "AbortError") {
+          return;
+        }
+        console.error("Unable to load gender options", error);
+        setGenderFetchError("We couldn't load gender options. Please try again shortly.");
+      } finally {
+        setIsLoadingGenders(false);
       }
     };
 
@@ -428,6 +395,7 @@ export const PersonalisedDetails: React.FC = () => {
     fetchYogaExperienceOptions();
     fetchMealTypeOptions();
     fetchStayTypeOptions();
+    fetchGenderOptions();
 
     return () => {
       yogaGoalController.abort();
@@ -439,6 +407,7 @@ export const PersonalisedDetails: React.FC = () => {
       yogaExperienceController.abort();
       mealTypeController.abort();
       stayTypeController.abort();
+      genderController.abort();
     };
   }, []);
 
@@ -547,7 +516,12 @@ const validateFamilyHistory = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value, age: "" }));
+    const shouldResetAge = name === "day" || name === "month" || name === "year";
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(shouldResetAge ? { age: "" } : {}),
+    }));
     clearFieldError(name);
   };
 
@@ -1039,18 +1013,25 @@ const validateFamilyHistory = () => {
 
             <div className="formField">
               <label>Gender <span className="required-asterisk">*</span></label>
-              <div className="genderGroup">
-                {["Male", "Female", "Other"].map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    className={`genderBtn ${formData.gender === g ? "selected" : ""}`}
-                    onClick={() => handleGenderSelect(g)}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
+              {isLoadingGenders && <p className="helperText">Loading gender options...</p>}
+              {genderFetchError && <p className="error-message">{genderFetchError}</p>}
+              {!isLoadingGenders && !genderFetchError && genderOptions.length > 0 && (
+                <div className="genderGroup">
+                  {genderOptions.map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      className={`genderBtn ${formData.gender === g ? "selected" : ""}`}
+                      onClick={() => handleGenderSelect(g)}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!isLoadingGenders && !genderFetchError && genderOptions.length === 0 && (
+                <p className="helperText">No gender options available right now.</p>
+              )}
               {errors.gender && <p className="error-message">{errors.gender}</p>}
             </div>
 
@@ -1169,9 +1150,11 @@ const validateFamilyHistory = () => {
 
             
 
-            <button className="nextButton" type="submit">
-              Next
-            </button>
+            <div className="buttonRow">
+              <button className="nextButton" type="submit">
+                Next
+              </button>
+            </div>
           </>
         )}
 
@@ -1594,7 +1577,7 @@ const validateFamilyHistory = () => {
             </div>
             <div className="buttonRow">
               <button className="nextButton" type="submit">
-                Submit
+                Next
               </button>
             </div>
           </>
