@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "../styles/PersonalisedDetails.css";
 import { LeftIcon } from "../icons/LeftIcon";
+import { Modal } from "../components/Modal";
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 const NO_SYMPTOM_OPTION = "No current symptoms";
 const NO_SURGERY_OPTION = "No past surgeries";
 const FAMILY_MEMBER_OPTIONS = ["Father", "Mother", "Siblings", "Grandparents", "Children", "Other"];
@@ -15,24 +16,31 @@ type FormState = {
   mobile: string;
   email: string;
   gender: string;
+  age: string;
   day: string;
   month: string;
   year: string;
   city: string;
+  state: string;
   country: string;
   currentHealth: string[];
   healthNotes: string;
   yogaGoals: string[];
+  yogaGoalNotes: string; // New
   surgeries: string[];
   surgeryNotes: string;
   familyHistory: string[];
   familyNotes: string;
   familyMembers: string[];
   stressLevel: string;
+  physicalMetricsNotes: string; // New
   sleepPattern: string;
+  nightRoutineNotes: string; // New
   yogaExperience: string;
   mealType: string;
   stayType: string;
+  lifestyleNotes: string; // New
+  availability: string;
 };
 
 export const PersonalisedDetails: React.FC = () => {
@@ -43,28 +51,36 @@ export const PersonalisedDetails: React.FC = () => {
     mobile: "",
     email: "",
     gender: "",
+    age: "",
     day: "",
     month: "",
     year: "",
     city: "",
+    state: "",
     country: "",
     currentHealth: [],
     healthNotes: "",
     yogaGoals: [],
+    yogaGoalNotes: "", // New
     surgeries: [],
     surgeryNotes: "",
     familyHistory: [],
     familyNotes: "",
     familyMembers: [],
     stressLevel: "",
+    physicalMetricsNotes: "", // New
     sleepPattern: "",
+    nightRoutineNotes: "", // New
     yogaExperience: "",
     mealType: "",
     stayType: "",
+    lifestyleNotes: "", // New
+    availability: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(true);
   const [symptomOptions, setSymptomOptions] = useState<string[]>([]);
   const [isLoadingSymptoms, setIsLoadingSymptoms] = useState(false);
   const [symptomFetchError, setSymptomFetchError] = useState<string | null>(null);
@@ -92,6 +108,12 @@ export const PersonalisedDetails: React.FC = () => {
   const [stayTypeOptions, setStayTypeOptions] = useState<string[]>([]);
   const [isLoadingStayTypes, setIsLoadingStayTypes] = useState(false);
   const [stayTypeFetchError, setStayTypeFetchError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsModalOpen(true);
+  }, []);
 
   useEffect(() => {
     const symptomController = new AbortController();
@@ -421,10 +443,11 @@ export const PersonalisedDetails: React.FC = () => {
     if (!formData.mobile.trim()) newErrors.mobile = "Mobile number is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     if (!formData.gender) newErrors.gender = "Gender is required";
-    if (!formData.day) newErrors.day = "Day is required";
-    if (!formData.month) newErrors.month = "Month is required";
-    if (!formData.year) newErrors.year = "Year is required";
+    if (!formData.age && (!formData.day || !formData.month || !formData.year)) {
+      newErrors.age = "Please enter your age or date of birth.";
+    }
     if (!formData.city.trim()) newErrors.city = "City is required";
+    if (!formData.state.trim()) newErrors.state = "State is required";
     if (!formData.country) newErrors.country = "Country is required";
     return newErrors;
   };
@@ -501,11 +524,23 @@ const validateFamilyHistory = () => {
     });
   };
 
+  const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const age = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      age,
+      day: "",
+      month: "",
+      year: "",
+    }));
+    clearFieldError("age");
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value, age: "" }));
     clearFieldError(name);
   };
 
@@ -617,6 +652,18 @@ const validateFamilyHistory = () => {
     }));
     clearFieldError("stayType");
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const handlePreviousStep = () => {
     setCurrentStep((prev) => Math.max(1, prev - 1));
     setErrors({});
@@ -714,25 +761,116 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      try {
-        const response = await fetch("http://54.234.26.129:8082/api/v1/users/online/create", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
+      setCurrentStep(9); // Move to the new review step
+      return;
+    }
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    if (currentStep === 9) {
+      setErrors({});
+
+      const now = new Date();
+      const subscribeDate = now.toISOString();
+      const subscribeExpiry = new Date(now);
+      subscribeExpiry.setFullYear(subscribeExpiry.getFullYear() + 1);
+
+      const ageValue = formData.age.trim();
+      const maybeAge = Number(ageValue);
+      const age = ageValue && Number.isFinite(maybeAge) ? maybeAge : null;
+
+      const mobileDigits = formData.mobile.replace(/\D/g, "");
+      const mobileNumber = mobileDigits || "";
+
+      const symptoms = formData.currentHealth.includes(NO_SYMPTOM_OPTION)
+        ? []
+        : formData.currentHealth;
+      const surgeries = formData.surgeries.includes(NO_SURGERY_OPTION) ? [] : formData.surgeries;
+      const password = `${formData.firstName.trim() || "User"}@123`;
+
+      const otherNotes = [
+        formData.healthNotes,
+        formData.yogaGoalNotes,
+        formData.surgeryNotes,
+        formData.familyNotes,
+        formData.physicalMetricsNotes,
+        formData.nightRoutineNotes,
+        formData.lifestyleNotes,
+      ]
+        .map((note) => note.trim())
+        .filter(Boolean)
+        .join(" | ");
+
+      const payload = {
+        name: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        state: formData.state.trim(),
+        email: formData.email.trim(),
+        mobileNumber,
+        gender: formData.gender,
+        age: age ?? null,
+        level: formData.yogaExperience,
+        healthNotes: formData.healthNotes.trim(),
+        yogaGoals: formData.yogaGoals,
+        symptoms,
+        surgeries,
+        healthHistory: formData.familyHistory,
+        city: formData.city.trim(),
+        availability: formData.availability.trim(),
+        mealType: formData.mealType,
+        stayType: formData.stayType,
+        stressLevel: formData.stressLevel,
+        sleepPattern: formData.sleepPattern,
+        otherNotes,
+        password,
+        subscribeDate,
+        subscribeExpiryDate: subscribeExpiry.toISOString(),
+        online: true,
+        status: "PENDING",
+      };
+
+      const API_BASE_URL = "http://54.234.26.129:8082";
+      const requestUrl = `${API_BASE_URL.replace(/\/$/, "")}/api/v1/users/online/create`;
+
+      console.log("Final payload:", payload);
+      console.log("Submitting payload to:", requestUrl);
+
+      try {
+        // Always use multipart/form-data, even if no image selected
+        const formDataToSend = new FormData();
+        formDataToSend.append(
+          "online_user",
+          new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
+
+        if (selectedFile) {
+          formDataToSend.append("image", selectedFile, selectedFile.name);
         }
 
-        const result = await response.json();
-        alert("Form submitted successfully! " + JSON.stringify(result));
-        // Optionally, reset form or redirect
-        // setFormData(initialFormState);
-        // setCurrentStep(1);
+        const response = await fetch(requestUrl, {
+          method: "POST",
+          body: formDataToSend, // Do not add headers; browser sets boundary
+        });
+
+        console.log("Response status:", response.status, "from:", response.url || requestUrl);
+
+        const rawBody = await response.text();
+        const contentType = response.headers.get("content-type") || "";
+        const isJson = contentType.toLowerCase().includes("application/json");
+        const parsedBody = rawBody && isJson ? JSON.parse(rawBody) : rawBody || null;
+
+        if (!response.ok) {
+          const message =
+            (parsedBody && typeof parsedBody === "object" && "message" in parsedBody
+              ? (parsedBody as { message?: string }).message
+              : null) ||
+            (typeof parsedBody === "string" && parsedBody.trim() ? parsedBody : null) ||
+            `HTTP error! status: ${response.status}`;
+          throw new Error(message);
+        }
+
+        alert(
+          "Form submitted successfully! " +
+            (parsedBody ? (typeof parsedBody === "string" ? parsedBody : JSON.stringify(parsedBody)) : "Success")
+        );
       } catch (error) {
         console.error("Error submitting form:", error);
         alert("Failed to submit form: " + (error as Error).message);
@@ -793,6 +931,27 @@ const validateFamilyHistory = () => {
             <p className="formSubtitle">
               A few simple details will help Nirvaana craft sessions that truly fit you.
             </p>
+
+            <div className="formField profile-picture-container">
+              <label htmlFor="image">
+                <div className="profile-picture-placeholder">
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Profile Preview" className="profile-picture" />
+                  ) : (
+                    <span>+</span>
+                  )}
+                </div>
+                Profile picture
+              </label>
+              <input
+                id="image"
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+              />
+            </div>
 
             <div className="formField">
               <label htmlFor="firstName">First name <span className="required-asterisk">*</span></label>
@@ -888,14 +1047,27 @@ const validateFamilyHistory = () => {
             </div>
 
             <div className="formField">
-              <label>Date of birth <span className="required-asterisk">*</span></label>
+              <label htmlFor="age">Age</label>
+              <input
+                id="age"
+                type="number"
+                name="age"
+                value={formData.age}
+                onChange={handleAgeChange}
+                placeholder="Your age"
+                className={errors.age ? "error" : ""}
+              />
+            </div>
+
+            <div className="formField">
+              <label>Date of birth</label>
               <div className="inlineFields">
                 <select
                   name="day"
                   id="day"
                   value={formData.day}
                   onChange={handleChange}
-                  className={errors.day ? "error" : ""}
+                  className={errors.age ? "error" : ""}
                 >
                   <option value="">Day</option>
                   {[...Array(31)].map((_, i) => (
@@ -909,7 +1081,7 @@ const validateFamilyHistory = () => {
                   id="month"
                   value={formData.month}
                   onChange={handleChange}
-                  className={errors.month ? "error" : ""}
+                  className={errors.age ? "error" : ""}
                 >
                   <option value="">Month</option>
                   {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(
@@ -925,7 +1097,7 @@ const validateFamilyHistory = () => {
                   id="year"
                   value={formData.year}
                   onChange={handleChange}
-                  className={errors.year ? "error" : ""}
+                  className={errors.age ? "error" : ""}
                 >
                   <option value="">Year</option>
                   {Array.from({ length: 60 }, (_, i) => 2025 - i).map((y) => (
@@ -935,8 +1107,8 @@ const validateFamilyHistory = () => {
                   ))}
                 </select>
               </div>
-              {(errors.day || errors.month || errors.year) && (
-                <p className="error-message">Date of birth is required</p>
+              {errors.age && (
+                <p className="error-message">{errors.age}</p>
               )}
             </div>
 
@@ -948,11 +1120,26 @@ const validateFamilyHistory = () => {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                placeholder="Hyderabad"
+                placeholder="Bangalore"
                 autoComplete="address-level2"
                 className={errors.city ? "error" : ""}
               />
               {errors.city && <p className="error-message">{errors.city}</p>}
+            </div>
+
+            <div className="formField">
+              <label htmlFor="state">State <span className="required-asterisk">*</span></label>
+              <input
+                id="state"
+                type="text"
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                placeholder="Karnataka"
+                autoComplete="address-level1"
+                className={errors.state ? "error" : ""}
+              />
+              {errors.state && <p className="error-message">{errors.state}</p>}
             </div>
 
             <div className="formField">
@@ -971,6 +1158,8 @@ const validateFamilyHistory = () => {
               </select>
               {errors.country && <p className="error-message">{errors.country}</p>}
             </div>
+
+            
 
             <button className="nextButton" type="submit">
               Next
@@ -1013,11 +1202,11 @@ const validateFamilyHistory = () => {
             </div>
             <div className="formField">
               <textarea
-                id="healthNotes"
-                name="healthNotes"
-                value={formData.healthNotes}
+                id="yogaGoalNotes"
+                name="yogaGoalNotes"
+                value={formData.yogaGoalNotes}
                 onChange={handleChange}
-                placeholder="Tell us more..."
+                placeholder="Tell us more about your goals..."
               />
             </div>
 
@@ -1229,6 +1418,15 @@ const validateFamilyHistory = () => {
               )}
               {errors.stressLevel && <p className="error-message">{errors.stressLevel}</p>}
             </div>
+            <div className="formField">
+              <textarea
+                id="physicalMetricsNotes"
+                name="physicalMetricsNotes"
+                value={formData.physicalMetricsNotes}
+                onChange={handleChange}
+                placeholder="Tell us more about your physical metrics..."
+              />
+            </div>
 
             <div className="buttonRow">
               <button className="nextButton" type="submit">
@@ -1275,6 +1473,15 @@ const validateFamilyHistory = () => {
                   Select one option or choose '{NO_SLEEP_PATTERN_OPTION}' if no routine fits.
                 </p>
               )}
+            </div>
+            <div className="formField">
+              <textarea
+                id="nightRoutineNotes"
+                name="nightRoutineNotes"
+                value={formData.nightRoutineNotes}
+                onChange={handleChange}
+                placeholder="Tell us more about your night routine..."
+              />
             </div>
               <div className="buttonRow">
               <button className="nextButton" type="submit">
@@ -1370,6 +1577,52 @@ const validateFamilyHistory = () => {
               )}
               {errors.stayType && <p className="error-message">{errors.stayType}</p>}
             </div>
+
+            <div className="formField">
+              <label htmlFor="availability">Preferred availability</label>
+              <input
+                id="availability"
+                type="text"
+                name="availability"
+                value={formData.availability}
+                onChange={handleChange}
+                placeholder="Morning, Afternoon, Evening..."
+              />
+            </div>
+
+            <div className="formField">
+              <textarea
+                id="lifestyleNotes"
+                name="lifestyleNotes"
+                value={formData.lifestyleNotes}
+                onChange={handleChange}
+                placeholder="Tell us more about your lifestyle and habits..."
+              />
+            </div>
+            <div className="buttonRow">
+              <button className="nextButton" type="submit">
+                Submit
+              </button>
+            </div>
+          </>
+        )}
+
+        {currentStep === 9 && (
+          <>
+            <h3 className="formTitle">Review your details</h3>
+            <p className="formSubtitle">
+              Please review your information before submitting.
+            </p>
+
+            <div className="review-details">
+              {Object.entries(formData).map(([key, value]) => (
+                <div className="review-item" key={key}>
+                  <strong>{key}:</strong>{" "}
+                  {Array.isArray(value) ? value.join(", ") : value.toString()}
+                </div>
+              ))}
+            </div>
+
             <div className="buttonRow">
               <button className="nextButton" type="submit">
                 Submit
@@ -1378,6 +1631,15 @@ const validateFamilyHistory = () => {
           </>
         )}
       </form>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={() => setIsModalOpen(false)}
+        title="Take a moment for you "
+      >
+        <p>This easy 3-minute survey lets Nirvaana tailor every session to your needs. 
+          your answers stay private and help us to create your most mindful experience</p>
+      </Modal>
     </div>
   );
 };
