@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import './App.css';
 import Carousel from './components/Carousel';
+import { Navbar } from './components/Navbar';
 import { Login } from './pages/Login';
 import { Home } from './pages/Home'; // Import Home component
 import { FreeContent } from './pages/FreeContent';
@@ -18,14 +19,15 @@ const MEDITATION_PATH = '/meditation';
 const PERSONALISED_YOGA_PATH = '/personalised-yoga';
 const PERSONALISED_DETAILS_PATH = '/personalised-details';
 
-const getCurrentUrl = () =>
-  `${window.location.pathname}${window.location.search}${window.location.hash}`;
+const NAVBAR_PATHS = new Set([
+  FREE_CONTENT_PATH,
+  FREE_GUIDED_YOGA_PATH,
+  MEDITATION_PATH,
+  PERSONALISED_YOGA_PATH,
+]);
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname); // Track current path
-  const defaultPathRef = useRef<string>(
-    window.location.pathname === LOGIN_PATH ? '/' : getCurrentUrl()
-  );
 
   useEffect(() => {
     const handlePopState = () => {
@@ -64,29 +66,33 @@ function App() {
 
   
 
-  // Conditional rendering based on currentPath
+  let currentPage: ReactElement | null = null;
+
   if (currentPath === HOME_PATH) {
-    return <Home />;
+    currentPage = <Home />;
+  } else if (currentPath === FREE_CONTENT_PATH) {
+    currentPage = <FreeContent />;
+  } else if (currentPath === FREE_GUIDED_YOGA_PATH) {
+    currentPage = <FreeGuidedYoga />;
+  } else if (currentPath === MEDITATION_PATH) {
+    currentPage = <Meditation />;
+  } else if (currentPath === PERSONALISED_YOGA_PATH) {
+    currentPage = <PersonalisedYoga />;
+  } else if (currentPath === PERSONALISED_DETAILS_PATH) {
+    currentPage = <PersonalisedDetails />;
   }
 
-  if (currentPath === FREE_CONTENT_PATH) {
-    return <FreeContent />;
-  }
+  const shouldShowNavbar = NAVBAR_PATHS.has(currentPath);
 
-  if (currentPath === FREE_GUIDED_YOGA_PATH) {
-    return <FreeGuidedYoga />;
-  }
-
-  if (currentPath === MEDITATION_PATH) {
-    return <Meditation />;
-  }
-
-  if (currentPath === PERSONALISED_YOGA_PATH) {
-    return <PersonalisedYoga />;
-  }
-
-  if (currentPath === PERSONALISED_DETAILS_PATH) {
-    return <PersonalisedDetails />;
+  if (currentPage) {
+    return (
+      <>
+        <div className={shouldShowNavbar ? 'page-with-navbar' : undefined}>
+          {currentPage}
+        </div>
+        {shouldShowNavbar && <Navbar />}
+      </>
+    );
   }
 
   return (

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../styles/PersonalisedDetails.css";
 import { LeftIcon } from "../icons/LeftIcon";
 import { Modal } from "../components/Modal";
@@ -51,6 +51,15 @@ type EnumValue = string | { name?: string; status?: string | null };
 type EnumResponse = {
   groupName?: string;
   values?: EnumValue[];
+};
+
+type ReviewSection = {
+  key: string;
+  title: string;
+  description: string;
+  step?: number;
+  rows?: { label: string; value: string }[];
+  lists?: { label: string; items: string[] }[];
 };
 
 const extractActiveEnumNames = (values: EnumValue[]): string[] => {
@@ -144,6 +153,7 @@ export const PersonalisedDetails: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
+  const [reviewEditStep, setReviewEditStep] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(true);
   
   const [symptomOptions, setSymptomOptions] = useState<string[]>([]);
@@ -646,8 +656,37 @@ const validateFamilyHistory = () => {
     }
   };
   const handlePreviousStep = () => {
+    if (reviewEditStep !== null && reviewEditStep === currentStep) {
+      setReviewEditStep(null);
+      setCurrentStep(9);
+      setErrors({});
+      return;
+    }
     setCurrentStep((prev) => Math.max(1, prev - 1));
     setErrors({});
+  };
+
+  const goToReviewOrStep = (nextStep: number) => {
+    if (reviewEditStep !== null && reviewEditStep === currentStep) {
+      setReviewEditStep(null);
+      setCurrentStep(9);
+    } else {
+      setCurrentStep(nextStep);
+    }
+  };
+
+  const renderPrimaryButton = (defaultLabel = "Next") => {
+    const isEditingThisStep = reviewEditStep === currentStep;
+    return (
+      <div className="buttonRow">
+        <button
+          className={isEditingThisStep ? "updateButton" : "nextButton"}
+          type="submit"
+        >
+          {isEditingThisStep ? "Update" : defaultLabel}
+        </button>
+      </div>
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -661,7 +700,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(2);
+      goToReviewOrStep(2);
       return;
     }
     if (currentStep === 2) {
@@ -672,7 +711,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(3);
+      goToReviewOrStep(3);
       return;
     }
     if (currentStep === 3) {
@@ -683,7 +722,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(4);
+      goToReviewOrStep(4);
       return;
     }
     if (currentStep === 4) {
@@ -694,7 +733,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(5);
+      goToReviewOrStep(5);
       return;
     }
 
@@ -706,7 +745,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(6);
+      goToReviewOrStep(6);
       return;
     }
 
@@ -718,7 +757,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(7);
+      goToReviewOrStep(7);
       return;
     }
 
@@ -730,7 +769,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(8);
+      goToReviewOrStep(8);
       return;
     }
 
@@ -742,7 +781,7 @@ const validateFamilyHistory = () => {
       }
 
       setErrors({});
-      setCurrentStep(9); // Move to the new review step
+      goToReviewOrStep(9); // Move to the new review step
       return;
     }
 
@@ -876,6 +915,163 @@ const validateFamilyHistory = () => {
   const isYogaExperienceSelected = (value: string) => formData.yogaExperience === value;
   const isMealTypeSelected = (value: string) => formData.mealType === value;
   const isStayTypeSelected = (value: string) => formData.stayType === value;
+
+  const formatValue = (value?: string | null) => {
+    if (value === null || value === undefined) return null;
+    const trimmed = value.toString().trim();
+    return trimmed.length ? trimmed : null;
+  };
+
+  const formatPhoneNumber = () => {
+    const phone = formData.mobile?.trim();
+    if (!phone) return null;
+    const code = formData.countryCode?.trim() || "";
+    const combined = `${code} ${phone}`.trim();
+    return combined.length ? combined : null;
+  };
+
+  const formatDateOfBirth = () => {
+    const { day, month, year } = formData;
+    const parts = [day, month, year]
+      .map((part) => (part ? part.trim() : ""))
+      .filter(Boolean);
+    if (!parts.length) return null;
+    return parts.join(" ");
+  };
+
+  const formatListItems = (items: string[], additional?: string) => {
+    const cleaned = (items || [])
+      .map((item) => item?.trim())
+      .filter((item): item is string => Boolean(item && item.length));
+    if (additional) {
+      const extra = additional.trim();
+      if (extra) cleaned.push(extra);
+    }
+    return cleaned;
+  };
+
+  const reviewSections = useMemo<ReviewSection[]>(
+    () => [
+      {
+        key: "personal-info",
+        title: "Personal info",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 1,
+        rows: [
+          { label: "First name", value: formatValue(formData.firstName) },
+          { label: "Last name", value: formatValue(formData.lastName) },
+          { label: "Email", value: formatValue(formData.email) },
+          { label: "Phone number", value: formatPhoneNumber() },
+          { label: "Gender", value: formatValue(formData.gender) },
+          { label: "Age", value: formatValue(formData.age) },
+          { label: "Date of birth", value: formatDateOfBirth() },
+          { label: "City", value: formatValue(formData.city) },
+          { label: "State", value: formatValue(formData.state) },
+          { label: "Country", value: formatValue(formData.country) },
+        ].filter((row): row is { label: string; value: string } => Boolean(row.value)),
+      },
+      {
+        key: "personal-goal",
+        title: "Your personal goal!",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 2,
+        lists: [
+          {
+            label: "Your core intention",
+            items: formatListItems(formData.yogaGoals),
+          },
+        ].filter((list) => list.items.length > 0),
+        rows: [
+          { label: "Goal notes", value: formatValue(formData.yogaGoalNotes) },
+        ].filter((row): row is { label: string; value: string } => Boolean(row.value)),
+      },
+      {
+        key: "current-health",
+        title: "Current health",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 3,
+        lists: [
+          {
+            label: "Physical health",
+            items: formatListItems(formData.currentHealth),
+          },
+        ].filter((list) => list.items.length > 0),
+        rows: [{ label: "Health notes", value: formatValue(formData.healthNotes) }].filter(
+          (row): row is { label: string; value: string } => Boolean(row.value)
+        ),
+      },
+      {
+        key: "medical-history",
+        title: "Medical history",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 4,
+        lists: [
+          {
+            label: "Surgeries & injuries",
+            items: formatListItems(formData.surgeries),
+          },
+        ].filter((list) => list.items.length > 0),
+        rows: [{ label: "Surgery notes", value: formatValue(formData.surgeryNotes) }].filter(
+          (row): row is { label: string; value: string } => Boolean(row.value)
+        ),
+      },
+      {
+        key: "family-health",
+        title: "Family health",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 5,
+        lists: [
+          {
+            label: "Family history",
+            items: formatListItems(formData.familyHistory),
+          },
+        ].filter((list) => list.items.length > 0),
+        rows: [
+          { label: "Family notes", value: formatValue(formData.familyNotes) },
+          {
+            label: "Family members",
+            value: formatListItems(formData.familyMembers).join(", "),
+          },
+        ].filter((row): row is { label: string; value: string } => Boolean(row.value)),
+      },
+      {
+        key: "physical-metrics",
+        title: "Physical metrics",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 6,
+        rows: [
+          { label: "Stress level", value: formatValue(formData.stressLevel) },
+          {
+            label: "Physical notes",
+            value: formatValue(formData.physicalMetricsNotes),
+          },
+        ].filter((row): row is { label: string; value: string } => Boolean(row.value)),
+      },
+      {
+        key: "night-routine",
+        title: "Night routine",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 7,
+        rows: [
+          { label: "Sleep pattern", value: formatValue(formData.sleepPattern) },
+          { label: "Night routine notes", value: formatValue(formData.nightRoutineNotes) },
+        ].filter((row): row is { label: string; value: string } => Boolean(row.value)),
+      },
+      {
+        key: "lifestyle",
+        title: "Lifestyle & habits",
+        description: "A few simple details will help Nirvaana craft sessions that truly fit you.",
+        step: 8,
+        rows: [
+          { label: "Yoga experience", value: formatValue(formData.yogaExperience) },
+          { label: "Meal type", value: formatValue(formData.mealType) },
+          { label: "Stay type", value: formatValue(formData.stayType) },
+          { label: "Lifestyle notes", value: formatValue(formData.lifestyleNotes) },
+        ].filter((row): row is { label: string; value: string } => Boolean(row.value)),
+      },
+    ],
+    [formData]
+  );
 
   return (
     <div className="personalFormContainer">
@@ -1150,11 +1346,7 @@ const validateFamilyHistory = () => {
 
             
 
-            <div className="buttonRow">
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+            {renderPrimaryButton()}
           </>
         )}
 
@@ -1201,11 +1393,7 @@ const validateFamilyHistory = () => {
               />
             </div>
 
-            <div className="buttonRow">
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+            {renderPrimaryButton()}
           </>
         )}
 
@@ -1252,12 +1440,7 @@ const validateFamilyHistory = () => {
               />
             </div>
 
-            <div className="buttonRow">
-
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+            {renderPrimaryButton()}
           </>
         )}
 
@@ -1304,12 +1487,7 @@ const validateFamilyHistory = () => {
               />
             </div>
 
-            <div className="buttonRow">
-
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+            {renderPrimaryButton()}
           </>
         )}
 
@@ -1366,12 +1544,7 @@ const validateFamilyHistory = () => {
               />
             </div>
 
-            <div className="buttonRow">
-
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+            {renderPrimaryButton()}
           </>
         )}
 
@@ -1417,11 +1590,7 @@ const validateFamilyHistory = () => {
               />
             </div>
 
-            <div className="buttonRow">
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+            {renderPrimaryButton()}
           </>
           
         )}
@@ -1471,11 +1640,7 @@ const validateFamilyHistory = () => {
                 placeholder="Tell us more..."
               />
             </div>
-              <div className="buttonRow">
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+              {renderPrimaryButton()}
             
           </>
         )}
@@ -1575,33 +1740,77 @@ const validateFamilyHistory = () => {
                 placeholder="Tell us more..."
               />
             </div>
-            <div className="buttonRow">
-              <button className="nextButton" type="submit">
-                Next
-              </button>
-            </div>
+            {renderPrimaryButton()}
           </>
         )}
 
         {currentStep === 9 && (
           <>
-            <h3 className="formTitle">Review your details</h3>
-            <p className="formSubtitle">
-              Please review your information before submitting.
-            </p>
+            <div className="review-summary">
+              <div className="review-summary__header">
+                <p className="review-summary__step">
+                  Step {currentStep} of {TOTAL_STEPS}
+                </p>
+                <h3 className="review-summary__title">Summary</h3>
+                <p className="review-summary__subtitle">
+                  Take a quick look at your information before confirming — this helps us create the best experience for you.
+                </p>
+              </div>
 
-            <div className="review-details">
-              {Object.entries(formData).map(([key, value]) => (
-                <div className="review-item" key={key}>
-                  <strong>{key}:</strong>{" "}
-                  {Array.isArray(value) ? value.join(", ") : value.toString()}
-                </div>
+              {reviewSections.map((section) => (
+                <section className="review-section" key={section.key}>
+                  <div className="review-section__header">
+                    <div>
+                      <h4>{section.title}</h4>
+                      <p>{section.description}</p>
+                    </div>
+                    {typeof section.step === "number" && (
+                      <button
+                        type="button"
+                        className="review-edit"
+                        onClick={() => {
+                          setReviewEditStep(section.step as number);
+                          setCurrentStep(section.step as number);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                      >
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM0 18V13.75L13.2 0.575C13.4 0.391667 13.6208 0.25 13.8625 0.15C14.1042 0.05 14.3583 0 14.625 0C14.8917 0 15.15 0.05 15.4 0.15C15.65 0.25 15.8667 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7708 2.4 17.8625 2.65C17.9542 2.9 18 3.15 18 3.4C18 3.66667 17.9542 3.92083 17.8625 4.1625C17.7708 4.40417 17.625 4.625 17.425 4.825L4.25 18H0ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="#FFAE00"/>
+                      </svg>
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {section.rows && (
+                    <dl className="review-rows">
+                      {section.rows.map((row) => (
+                        <div className="review-row" key={`${section.key}-${row.label}`}>
+                          <dt>{row.label}</dt>
+                          <dd>{row.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+
+                  {section.lists &&
+                    section.lists.map((list) => (
+                      <div className="review-list" key={`${section.key}-${list.label}`}>
+                        <p className="review-list__label">{list.label}</p>
+                        <ul>
+                          {list.items.map((item) => (
+                            <li key={`${list.label}-${item}`}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                </section>
               ))}
             </div>
 
             <div className="buttonRow">
               <button className="nextButton" type="submit">
-                Submit
+                Confirm & Submit
               </button>
             </div>
           </>

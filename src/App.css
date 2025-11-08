@@ -27,3 +27,7 @@
 body.App--locked {
   overflow: hidden;
 }
+
+.page-with-navbar {
+  padding-bottom: calc(var(--navbar-height, 6.4rem) + var(--space-6, 2.4rem));
+}

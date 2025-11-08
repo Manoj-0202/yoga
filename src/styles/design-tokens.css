@@ -42,6 +42,8 @@
   --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
   --color-border: #e5e7eb;
+  --navbar-height: 6.4rem;
+  --navbar-icon-size: 2.4rem;
 }
 
 @media (min-width: 48rem) {
