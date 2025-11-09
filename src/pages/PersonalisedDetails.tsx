@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../styles/PersonalisedDetails.css";
 import { LeftIcon } from "../icons/LeftIcon";
 import { Modal } from "../components/Modal";
+import SuccessSplashImage from "../assets/Splash screen (2).png";
 
 
 const API_BASE_URL = "http://54.234.26.129:8082";
@@ -155,6 +156,7 @@ export const PersonalisedDetails: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [reviewEditStep, setReviewEditStep] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isSuccessSplashVisible, setIsSuccessSplashVisible] = useState(false);
   
   const [symptomOptions, setSymptomOptions] = useState<string[]>([]);
   const [isLoadingSymptoms, setIsLoadingSymptoms] = useState(false);
@@ -193,7 +195,6 @@ export const PersonalisedDetails: React.FC = () => {
     setIsModalOpen(true);
   }, []);
 
-  
 
   useEffect(() => {
     const symptomController = new AbortController();
@@ -886,10 +887,9 @@ const validateFamilyHistory = () => {
           throw new Error(message);
         }
 
-        alert(
-          "Form submitted successfully! " +
-            (parsedBody ? (typeof parsedBody === "string" ? parsedBody : JSON.stringify(parsedBody)) : "Success")
-        );
+        setIsSuccessSplashVisible(true);
+        window.scrollTo({ top: 0, behavior: "auto" });
+        return;
       } catch (error) {
         console.error("Error submitting form:", error);
         alert("Failed to submit form: " + (error as Error).message);
@@ -1073,6 +1073,16 @@ const validateFamilyHistory = () => {
     [formData]
   );
 
+  const renderSuccessSplash = () => (
+    <div className="fullscreen-splash">
+      <img src={SuccessSplashImage} alt="Nirvaana Yoga" />
+    </div>
+  );
+
+  if (isSuccessSplashVisible) {
+    return renderSuccessSplash();
+  }
+
   return (
     <div className="personalFormContainer">
       <header className="header">
@@ -1126,7 +1136,8 @@ const validateFamilyHistory = () => {
                 accept="image/*"
                 onChange={handleFileChange}
                 style={{ display: "none" }}
-                required
+                required={currentStep === 1 && !imagePreview}
+                tabIndex={currentStep === 1 ? 0 : -1}
               />
               {errors.image && <p className="error-message">{errors.image}</p>}
             </div>

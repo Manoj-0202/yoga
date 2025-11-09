@@ -28,7 +28,7 @@ export const Login: React.FC = () => {
 
     if (!/^\d+$/.test(trimmedMobile)) {
       setStatus('error');
-      setFeedback('Mobile number should contain only digits.');
+      setFeedback('Enter valid mobile number.');
       return;
     }
 
@@ -46,7 +46,7 @@ export const Login: React.FC = () => {
         const errorBody = await response.json().catch(() => ({}));
         const message =
           typeof errorBody === 'object' && errorBody !== null
-            ? errorBody.message || errorBody.phoneNumber || JSON.stringify(errorBody)
+            ? errorBody.message || errorBody.phoneNumber || 'Unable to send OTP right now.'
             : 'Unexpected response';
         throw new Error(message);
       }
@@ -88,7 +88,7 @@ export const Login: React.FC = () => {
         const errorBody = await response.json().catch(() => ({}));
         const message =
           typeof errorBody === 'object' && errorBody !== null
-            ? errorBody.message || errorBody.otp || JSON.stringify(errorBody)
+            ? errorBody.message || errorBody.otp || 'Unable to verify OTP right now.'
             : 'Unexpected response';
         throw new Error(message);
       }

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import '../styles/Home.css';
 import Logo from '../assets/Vector.png';
-import WelcomeImage from '../assets/Mask group.png'; // ← add your uploaded image here
+import WelcomeVideo from "../assets/welcome-video.mp4";
 
 export const Home: React.FC = () => {
   const [progress, setProgress] = useState(0);
@@ -23,21 +23,42 @@ export const Home: React.FC = () => {
 
   if (showWelcome) {
     return (
-      <div className="welcome-container">
-        <div className="welcome-image-section">
-          <img src={WelcomeImage} alt="Yoga Pose" className="welcome-hero" />
-        </div>
+      <div className="welcome-screen">
+        <div className="welcome-container">
+          <div className="welcome-image-section">
+            <video
+              className="welcome-hero"
+              src={WelcomeVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+              controls={false}
+            />
+            <span className="welcome-video-label">Automatically play the video (placeholder)</span>
+          </div>
 
-        <div className="welcome-content">
-          <h2 className="welcome-heading">Welcome to Nirvaana Yoga</h2>
-          <p className="welcome-subtext">
-            Set your goals for a personalized experience—or skip and start your free yoga journey.
-            Relax, focus, and grow daily.
-          </p>
+          <div className="welcome-content">
+            <h2 className="welcome-heading">Welcome to Nirvaana Yoga</h2>
+            <p className="welcome-subtext">
+              Set your goals for a personalized experience—or skip and start your free yoga journey.
+              Relax, focus, and grow daily.
+            </p>
 
-          <div className="welcome-actions">
-            <button className="btn-primary" onClick={() => window.history.pushState(null, '', '/personalised-details')}>Personalised</button>
-            <button className="btn-outline" onClick={() => window.history.pushState(null, '', '/free-content')}>Free Content</button>
+            <div className="welcome-actions">
+              <button
+                className="btn-primary"
+                onClick={() => window.history.pushState(null, '', '/personalised-details')}
+              >
+                Personalised
+              </button>
+              <button
+                className="btn-outline"
+                onClick={() => window.history.pushState(null, '', '/free-content')}
+              >
+                Free Content
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -56,3 +77,4 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
