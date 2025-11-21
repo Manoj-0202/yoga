@@ -1,17 +1,25 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { CapacitorHttp } from "@capacitor/core";
+import { Preferences } from "@capacitor/preferences";
 import "../styles/PersonalisedDetails.css";
+import { API_ROOT, ONLINE_USER_CREATE_ENDPOINT } from "../constants";
 import { LeftIcon } from "../icons/LeftIcon";
 import { Modal } from "../components/Modal";
 import SuccessSplashImage from "../assets/Splash screen (2).png";
+import { isNativeRuntime } from "../utils/platform";
 
-
-const API_BASE_URL = "http://54.234.26.129:8082";
-const API_ROOT = API_BASE_URL.replace(/\/$/, "");
 const TOTAL_STEPS = 9;
 const NO_SYMPTOM_OPTION = "No current symptoms";
 const NO_SURGERY_OPTION = "No past surgeries";
 const FAMILY_MEMBER_OPTIONS = ["Father", "Mother", "Siblings", "Grandparents", "Children", "Other"];
 const NO_SLEEP_PATTERN_OPTION = "No usual night routine";
+type CapFormDataEntry = {
+  key: string;
+  value: string;
+  type: "string" | "base64File";
+  contentType?: string;
+  fileName?: string;
+};
 
 type FormState = {
   firstName: string;
@@ -44,7 +52,6 @@ type FormState = {
   mealType: string;
   stayType: string;
   lifestyleNotes: string; // New
-  availability: string;
 };
 
 type EnumValue = string | { name?: string; status?: string | null };
@@ -90,14 +97,65 @@ const extractActiveEnumNames = (values: EnumValue[]): string[] => {
   return Array.from(new Set(unique));
 };
 
-const fetchEnumGroup = async (groupName: string, signal: AbortSignal) => {
-  const encodedGroup = encodeURIComponent(groupName.trim());
-  const response = await fetch(`${API_ROOT}/api/v1/enum/${encodedGroup}`, { signal });
-  if (!response.ok) {
-    throw new Error(`Request for ${groupName} failed with status ${response.status}`);
+const parseResponseData = (value: unknown) => {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+  return value;
+};
+
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        const commaIndex = reader.result.indexOf(",");
+        resolve(commaIndex >= 0 ? reader.result.slice(commaIndex + 1) : reader.result);
+      } else {
+        reject(new Error("Unable to read file."));
+      }
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read file."));
+    reader.readAsDataURL(file);
+  });
+
+const getJson = async (url: string, signal?: AbortSignal) => {
+  if (signal?.aborted) {
+    throw new DOMException("The request was aborted.", "AbortError");
   }
 
-  const data = await response.json();
+  if (isNativeRuntime()) {
+    const response = await CapacitorHttp.get({ url });
+    const parsed =
+      typeof response.data === "string"
+        ? (() => {
+            try {
+              return JSON.parse(response.data);
+            } catch {
+              return response.data;
+            }
+          })()
+        : response.data;
+
+    return { status: response.status, data: parsed };
+  }
+
+  const res = await fetch(url, { signal });
+  const data = await res.json();
+  return { status: res.status, data };
+};
+
+const fetchEnumGroup = async (groupName: string, signal: AbortSignal) => {
+  const encodedGroup = encodeURIComponent(groupName.trim());
+  const { status, data } = await getJson(`${API_ROOT}/api/v1/enum/${encodedGroup}`, signal);
+  if (status < 200 || status >= 300) {
+    throw new Error(`Request for ${groupName} failed with status ${status}`);
+  }
+
   let values: EnumValue[] | null = null;
 
   if (Array.isArray(data)) {
@@ -149,7 +207,6 @@ export const PersonalisedDetails: React.FC = () => {
     mealType: "",
     stayType: "",
     lifestyleNotes: "", // New
-    availability: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -385,12 +442,13 @@ export const PersonalisedDetails: React.FC = () => {
 
       try {
         const options = await fetchEnumGroup("Gender", genderController.signal);
-        setGenderOptions(options);
+        setGenderOptions(options.length ? options : ["Male", "Female"]);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;
         }
         console.error("Unable to load gender options", error);
+        setGenderOptions(["Male", "Female"]);
         setGenderFetchError("We couldn't load gender options. Please try again shortly.");
       } finally {
         setIsLoadingGenders(false);
@@ -824,8 +882,10 @@ const validateFamilyHistory = () => {
         name: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         state: formData.state.trim(),
+        country: formData.country.trim(),
         email: formData.email.trim(),
         mobileNumber,
+        countryCode: formData.countryCode.trim(),
         gender: formData.gender,
         age: age ?? null,
         level: formData.yogaExperience,
@@ -835,7 +895,6 @@ const validateFamilyHistory = () => {
         surgeries,
         healthHistory: formData.familyHistory,
         city: formData.city.trim(),
-        availability: formData.availability.trim(),
         mealType: formData.mealType,
         stayType: formData.stayType,
         stressLevel: formData.stressLevel,
@@ -848,42 +907,75 @@ const validateFamilyHistory = () => {
         status: "PENDING",
       };
 
-      const requestUrl = `${API_ROOT}/api/v1/users/online/create`;
+      const requestUrl = ONLINE_USER_CREATE_ENDPOINT;
 
       console.log("Final payload:", payload);
       console.log("Submitting payload to:", requestUrl);
 
       try {
-        // Always use multipart/form-data, even if no image selected
-        const formDataToSend = new FormData();
-        formDataToSend.append(
-          "online_user",
-          new Blob([JSON.stringify(payload)], { type: "application/json" })
-        );
-
-        if (selectedFile) {
-          formDataToSend.append("image", selectedFile, selectedFile.name);
+        const { value: token } = await Preferences.get({ key: "accessToken" });
+        if (!token) {
+          throw new Error("Authentication token not found. Please log in again.");
         }
 
-        const response = await fetch(requestUrl, {
-          method: "POST",
-          body: formDataToSend, // Do not add headers; browser sets boundary
-        });
+        const headers = {
+          'Authorization': `Bearer ${token}`
+        };
 
-        console.log("Response status:", response.status, "from:", response.url || requestUrl);
+        let status: number;
+        let rawBody: any;
 
-        const rawBody = await response.text();
-        const contentType = response.headers.get("content-type") || "";
-        const isJson = contentType.toLowerCase().includes("application/json");
-        const parsedBody = rawBody && isJson ? JSON.parse(rawBody) : rawBody || null;
+        if (isNativeRuntime()) {
+          const fd = new FormData();
+          fd.append("online_user", JSON.stringify(payload));
 
-        if (!response.ok) {
+          if (selectedFile) {
+            fd.append("image", selectedFile, selectedFile.name);
+          }
+
+          const response = await CapacitorHttp.post({
+            url: requestUrl,
+            headers,
+            data: {},
+            webFetchExtra: {
+              method: "POST",
+              body: fd,
+              headers: {},
+            },
+          });
+
+          status = response.status;
+          rawBody = response.data;
+        } else {
+          const fd = new FormData();
+          fd.append("online_user", JSON.stringify(payload));
+
+          if (selectedFile) {
+            fd.append("image", selectedFile, selectedFile.name);
+          }
+
+          const response = await fetch(requestUrl, {
+            method: "POST",
+            headers,
+            body: fd,
+          });
+
+          status = response.status;
+          rawBody = await response.text();
+        }
+
+
+        console.log("Response status:", status, "from:", requestUrl);
+
+        const parsedBody = parseResponseData(rawBody);
+
+        if (status < 200 || status >= 300) {
           const message =
             (parsedBody && typeof parsedBody === "object" && "message" in parsedBody
               ? (parsedBody as { message?: string }).message
               : null) ||
             (typeof parsedBody === "string" && parsedBody.trim() ? parsedBody : null) ||
-            `HTTP error! status: ${response.status}`;
+            `HTTP error! status: ${status}`;
           throw new Error(message);
         }
 
@@ -892,6 +984,7 @@ const validateFamilyHistory = () => {
         return;
       } catch (error) {
         console.error("Error submitting form:", error);
+        setErrors({ submit: (error as Error).message });
         alert("Failed to submit form: " + (error as Error).message);
       }
       return;

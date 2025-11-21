@@ -19,7 +19,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(12px, 5vw, 48px) 0;
+  padding: clamp(12px, 5vw, 48px) clamp(12px, 6vw, 64px);
+  padding-top: calc(env(safe-area-inset-top, 0px) + clamp(12px, 5vw, 48px));
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(12px, 5vw, 48px));
   overflow-y: hidden;
   z-index: 10;
 }
@@ -29,5 +31,5 @@ body.App--locked {
 }
 
 .page-with-navbar {
-  padding-bottom: calc(var(--navbar-height, 6.4rem) + var(--space-6, 2.4rem));
+  padding-bottom: calc(var(--navbar-height, 6.4rem) + var(--space-6, 2.4rem) + env(safe-area-inset-bottom, 0px));
 }

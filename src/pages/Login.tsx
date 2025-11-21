@@ -1,122 +1,226 @@
-import React, { useState } from 'react';
-import '../styles/Login.css';
+import React, { useEffect, useState } from "react";
+import { CapacitorHttp } from "@capacitor/core";
+import { Preferences } from "@capacitor/preferences";
+import "../styles/Login.css";
 
-import logo from '../assets/Nirvaana Yoga logo- circular logo image 1.png';
-import { OTP_ENDPOINT, OTP_VERIFY_ENDPOINT } from '../constants';
-import { Otp } from './Otp';
+import logo from "../assets/Nirvaana Yoga logo- circular logo image 1.png";
+import { OTP_ENDPOINT, OTP_VERIFY_ENDPOINT } from "../constants";
+import { Otp } from "./Otp";
+import { isNativeRuntime } from "../utils/platform";
 
+type JsonResponse = {
+  status: number;
+  data: unknown;
+};
+
+type RequestStatus = "idle" | "loading" | "success" | "error";
+
+const isErrorRecord = (value: unknown): value is Record<string, any> =>
+  typeof value === "object" && value !== null;
+
+const parseResponseData = (value: unknown) => {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+  return value;
+};
+
+/* ------------------------------------------------------------------
+   UNIVERSAL POST CALL -- Works for Android, iOS, Web
+------------------------------------------------------------------ */
+const postJson = async (url: string, body: Record<string, unknown>): Promise<JsonResponse> => {
+  if (isNativeRuntime()) {
+    try {
+      const response = await CapacitorHttp.request({
+        url,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: body,
+        connectTimeout: 15000,
+      });
+
+      return { status: response.status, data: parseResponseData(response.data) };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Unable to reach the server.";
+      const platformHint =
+        " Ensure the Android network security config trusts https://nyservices.nirvaanayoga.com:8443.";
+      throw new Error(`${msg}.${platformHint}`);
+    }
+  }
+
+  const fetchRes = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const text = await fetchRes.text();
+  let parsed: unknown = {};
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = text;
+    }
+  }
+  return { status: fetchRes.status, data: parsed };
+};
+
+/* ------------------------------------------------------------------
+   LOGIN COMPONENT
+------------------------------------------------------------------ */
 export const Login: React.FC = () => {
-  const [countryCode, setCountryCode] = useState<string>('+91');
-  const [mobile, setMobile] = useState<string>('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [feedback, setFeedback] = useState<string>('');
-  const [otp, setOtp] = useState<string>('');
+  const [countryCode, setCountryCode] = useState<string>("+91");
+  const [mobile, setMobile] = useState<string>("");
+  const [status, setStatus] = useState<RequestStatus>("idle");
+  const [feedback, setFeedback] = useState("");
+  const [otp, setOtp] = useState("");
+  const [route, setRoute] = useState<string>(
+    typeof window === "undefined" ? "/login" : window.location.pathname
+  );
+
+  useEffect(() => {
+    const handlePopState = () => setRoute(window.location.pathname);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const navigate = (path: "/login" | "/otp" | "/home") => {
+    window.history.pushState(null, "", path);
+    setRoute(path);
+  };
 
   const handleMobileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value.replace(/[^0-9]/g, '');
+    const value = event.target.value.replace(/[^0-9]/g, "");
     if (value.length <= 10) {
       setMobile(value);
     }
   };
 
+  const sanitizedMobile = mobile.trim();
+  const isValidMobile = /^\d{10}$/.test(sanitizedMobile);
+  const isValidOtp = /^\d{4}$/.test(otp);
+  const serverPhoneNumber = sanitizedMobile;
+
+  const showErrorFeedback = (message: string) => {
+    setStatus("error");
+    setFeedback(message);
+  };
+
+  /* ------------------------------------------------------------------
+     SEND OTP
+  ------------------------------------------------------------------ */
   const handleSendOtp = async () => {
-    const trimmedMobile = mobile.trim();
-
-    if (trimmedMobile.length !== 10 || status === 'loading') {
+    if (!isValidMobile || status === "loading") {
+      showErrorFeedback("Enter a valid 10-digit mobile number.");
       return;
     }
 
-    if (!/^\d+$/.test(trimmedMobile)) {
-      setStatus('error');
-      setFeedback('Enter valid mobile number.');
-      return;
-    }
-
-    setStatus('loading');
-    setFeedback('');
+    setStatus("loading");
+    setFeedback("");
 
     try {
-      const response = await fetch(OTP_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: trimmedMobile }),
+      const response = await postJson(OTP_ENDPOINT, {
+        phoneNumber: serverPhoneNumber,
       });
 
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        const message =
-          typeof errorBody === 'object' && errorBody !== null
-            ? errorBody.message || errorBody.phoneNumber || 'Unable to send OTP right now.'
-            : 'Unexpected response';
-        throw new Error(message);
+      if (response.status < 200 || response.status >= 300) {
+        const err = response.data;
+        const msg =
+          isErrorRecord(err) && (err.message || err.phoneNumber)
+            ? err.message || err.phoneNumber
+            : "Unable to send OTP right now.";
+        throw new Error(msg);
       }
 
-      setStatus('success');
-      setFeedback('OTP sent successfully.');
-      window.history.pushState(null, '', '/otp');
-      setOtp('');
+      setStatus("success");
+      setFeedback("OTP sent successfully.");
+      setOtp("");
+      navigate("/otp");
     } catch (error) {
-      console.error('Failed to send OTP:', error);
-      setStatus('error');
-      setFeedback(
-        error instanceof Error ? error.message : 'Unable to send OTP right now. Please try again.'
+      console.error("Send OTP Error:", error);
+      showErrorFeedback(
+        error instanceof Error ? error.message : "Unable to send OTP right now. Try again."
       );
     }
   };
 
-  const isSendDisabled = mobile.trim().length < 10 || status === 'loading';
-
+  /* ------------------------------------------------------------------
+     VERIFY OTP
+  ------------------------------------------------------------------ */
   const handleVerifyOtp = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (otp.length !== 4) {
-      setFeedback('Please enter the 4-digit OTP.');
-      setStatus('error');
+
+    if (!isValidOtp) {
+      showErrorFeedback("Enter the 4-digit OTP.");
       return;
     }
 
-    setStatus('loading');
-    setFeedback('');
+    if (!isValidMobile) {
+      showErrorFeedback("Invalid phone number. Please restart the login flow.");
+      navigate("/login");
+      return;
+    }
+
+    setStatus("loading");
+    setFeedback("");
 
     try {
-      const response = await fetch(OTP_VERIFY_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: mobile, otp: otp }),
+      const response = await postJson(OTP_VERIFY_ENDPOINT, {
+        phoneNumber: serverPhoneNumber,
+        otp,
       });
 
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        const message =
-          typeof errorBody === 'object' && errorBody !== null
-            ? errorBody.message || errorBody.otp || 'Unable to verify OTP right now.'
-            : 'Unexpected response';
-        throw new Error(message);
+      if (response.status < 200 || response.status >= 300) {
+        const err = response.data;
+        const msg =
+          isErrorRecord(err) && (err.message || err.otp)
+            ? err.message || err.otp
+            : "Unable to verify OTP right now.";
+        throw new Error(msg);
       }
 
-      setStatus('success');
-      setFeedback('OTP verified successfully.');
-      window.history.pushState(null, '', '/home');
+      // Store the token
+      if (isErrorRecord(response.data)) {
+        const token = response.data.accessToken || response.data.token;
+        if (typeof token === "string") {
+          await Preferences.set({ key: "accessToken", value: token });
+        }
+      }
+
+      setStatus("success");
+      setFeedback("OTP verified successfully.");
+      setOtp("");
+      navigate("/home");
     } catch (error) {
-      console.error('Failed to verify OTP:', error);
-      setStatus('error');
-      setFeedback(
-        error instanceof Error ? error.message : 'Unable to verify OTP right now. Please try again.'
+      console.error("Verify OTP Error:", error);
+      showErrorFeedback(
+        error instanceof Error ? error.message : "Unable to verify OTP right now. Try again."
       );
     }
   };
 
+  /* ------------------------------------------------------------------
+     RESET TO LOGIN
+  ------------------------------------------------------------------ */
   const resetToLogin = () => {
-    window.history.pushState(null, '', '/login');
-    setOtp('');
-    setStatus('idle');
-    setFeedback('');
+    navigate("/login");
+    setOtp("");
+    setFeedback("");
+    setStatus("idle");
   };
 
-  if (window.location.pathname === '/otp') {
+  /* ------------------------------------------------------------------
+     SHOW OTP SCREEN
+  ------------------------------------------------------------------ */
+  if (route === "/otp") {
     return (
       <Otp
         otp={otp}
-        setOtp={setOtp}
+        setOtp={(value) => setOtp(value.replace(/[^0-9]/g, ""))}
         handleVerifyOtp={handleVerifyOtp}
         handleSendOtp={handleSendOtp}
         resetToLogin={resetToLogin}
@@ -126,6 +230,13 @@ export const Login: React.FC = () => {
     );
   }
 
+  if (route === "/home") {
+    return null;
+  }
+
+  /* ------------------------------------------------------------------
+     LOGIN UI
+  ------------------------------------------------------------------ */
   return (
     <div className="login-container">
       <div className="logo-section">
@@ -142,13 +253,11 @@ export const Login: React.FC = () => {
       <div className="input-box">
         <div className="input-row">
           <div className="country-input">
-            <label className="input-label" htmlFor="login-country">
-              Country
-            </label>
+            <label className="input-label" htmlFor="login-country">Country</label>
             <select
               id="login-country"
               value={countryCode}
-              onChange={(event) => setCountryCode(event.target.value)}
+              onChange={(e) => setCountryCode(e.target.value)}
               className="country-select"
             >
               <option value="+91">+91</option>
@@ -159,9 +268,7 @@ export const Login: React.FC = () => {
           </div>
 
           <div className="mobile-input-container">
-            <label className="input-label" htmlFor="login-mobile">
-              Mobile number
-            </label>
+            <label className="input-label" htmlFor="login-mobile">Mobile number</label>
             <input
               id="login-mobile"
               type="tel"
@@ -171,52 +278,40 @@ export const Login: React.FC = () => {
               className="mobile-input"
               maxLength={10}
               inputMode="numeric"
-              aria-describedby="login-mobile-help"
             />
           </div>
         </div>
 
         <button
           type="button"
+          className={`otp-button${!isValidMobile || status === "loading" ? " disabled" : ""}`}
+          disabled={!isValidMobile || status === "loading"}
           onClick={handleSendOtp}
-          disabled={isSendDisabled}
-          className={`otp-button${isSendDisabled ? ' disabled' : ''}`}
         >
-          {status === 'loading' ? 'Sending…' : 'Send OTP'}
+          {status === "loading" ? "Sending..." : "Send OTP"}
         </button>
 
         {feedback && (
           <p
-            className={`login-feedback${
-              status === 'error' ? ' login-feedback--error' : ' login-feedback--success'
+            className={`login-feedback ${
+              status === "error" ? "login-feedback--error" : "login-feedback--success"
             }`}
-            role="status"
           >
             {feedback}
           </p>
         )}
 
-        <div className="divider">
-          <span>Or</span>
-        </div>
+        <div className="divider"><span>Or</span></div>
 
         <div className="social-buttons">
-          <button type="button" className="social-btn google">
-            Login with Google
-          </button>
-          <button type="button" className="social-btn apple">
-            Login with Apple
-          </button>
-          <button type="button" className="social-btn facebook">
-            Login with Facebook
-          </button>
+          <button className="social-btn google">Login with Google</button>
+          <button className="social-btn apple">Login with Apple</button>
+          <button className="social-btn facebook">Login with Facebook</button>
         </div>
 
         <p className="create-account">
-          Don't have an account yet?{' '}
-          <button type="button" className="create-link">
-            Create Account
-          </button>
+          Don't have an account yet?{" "}
+          <button type="button" className="create-link">Create Account</button>
         </p>
       </div>
     </div>

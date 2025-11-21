@@ -1,4 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { StatusBar } from '@capacitor/status-bar';
 import './App.css';
 import Carousel from './components/Carousel';
 import { Navbar } from './components/Navbar';
@@ -28,6 +31,27 @@ const NAVBAR_PATHS = new Set([
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname); // Track current path
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    const enterImmersiveMode = async () => {
+      try {
+        await StatusBar.hide();
+      } catch (error) {
+        console.warn('Unable to hide status bar', error);
+      } finally {
+        // Ensure the splash never lingers once the React tree mounts
+        SplashScreen.hide().catch((error) => {
+          console.warn('Unable to hide splash screen', error);
+        });
+      }
+    };
+
+    void enterImmersiveMode();
+  }, []);
 
   useEffect(() => {
     const handlePopState = () => {

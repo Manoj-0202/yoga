@@ -24,8 +24,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2, 0.8rem);
-  font-size: var(--font-size-xs, 1.2rem);
+  gap: var(--space-2, 0.4rem);
+  font-size: var(--font-size-xs, 1rem);
   line-height: 1.2;
 }
 
@@ -35,4 +35,10 @@
   fill: currentColor;
   stroke: currentColor;
   flex-shrink: 0;
+}
+
+@media (max-width: 320px) {
+  .navbar-item {
+    font-size: 0.8rem;
+  }
 }
